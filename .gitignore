@@ -1,33 +1,58 @@
-HELP.md
+# --- General ---
+*.log
+*.tmp
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Backend (Spring Boot + Maven) ---
 target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Maven wrapper
 .mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
+# IntelliJ / Eclipse
+.idea/
 *.iml
 *.ipr
+*.iws
+.classpath
+.project
+.settings/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
+# VS Code
 .vscode/
+
+# --- Frontend (React / Node.js) ---
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# --- Global Env & Config ---
+.env
+*.yml~
+*.yaml~
+*.properties~
+
+# --- Docker ---
+docker-data/
+docker-compose.override.yml
+
+# --- Tests / Coverage ---
+/test-output/
+/surefire-reports/
+/jacoco.exec
+/frontend/coverage/
+
+# --- OS ---
+ehthumbs.db
+Desktop.ini
