@@ -1,52 +1,55 @@
-# --- Fin de línea (EOL) ---
-# Forzar LF en la mayoría de archivos (Java, JS, configs, etc.)
+# --- Normalización de fin de línea ---
 * text=auto eol=lf
 
-# Mantener CRLF solo en scripts de Windows
+# Mantener CRLF en scripts de Windows
 *.cmd text eol=crlf
 *.bat text eol=crlf
 *.ps1 text eol=crlf
 
 # --- Código fuente ---
-*.java text diff=java
-*.js   text diff=javascript
-*.jsx  text diff=javascript
-*.ts   text diff=typescript
-*.tsx  text diff=typescript
-*.css  text
-*.html text
-*.xml  text
-*.yml  text
-*.yaml text
-*.json text
-*.sql  text diff=sql
+*.java   text diff=java
+*.js     text diff=javascript
+*.jsx    text diff=javascript
+*.ts     text diff=typescript
+*.tsx    text diff=typescript
+*.css    text
+*.html   text
+*.xml    text
+*.yml    text
+*.yaml   text
+*.json   text
+*.sql    text diff=sql
+
+# --- Next.js / React específicos ---
+next-env.d.ts text
+*.tsbuildinfo text
 
 # --- Documentación ---
-*.md   text
-*.txt  text
-*.adoc text
+*.md    text
+*.txt   text
+*.adoc  text
 
-# --- Binarios (no diffs) ---
-*.png  binary
-*.jpg  binary
-*.jpeg binary
-*.gif  binary
-*.ico  binary
-*.pdf  binary
-*.zip  binary
-*.jar  binary
-*.exe  binary
+# --- Archivos binarios (no diff) ---
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary
+*.zip   binary
+*.jar   binary
+*.exe   binary
 
 # --- Maven wrapper ---
-mvnw     text eol=lf
-mvnw.cmd text eol=crlf
+/mvnw     text eol=lf
+/mvnw.cmd text eol=crlf
 
 # --- Docker ---
 Dockerfile text
 *.dockerignore text
 
-# --- IDE configs ---
-*.iml text
+# --- Configuración IDE ---
+*.iml   text
 .idea/** text
 .vscode/** text
 
