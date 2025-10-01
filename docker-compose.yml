@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16
+    container_name: airvision-db
+    restart: always
+    environment:
+      POSTGRES_USER: airvision
+      POSTGRES_PASSWORD: airvision
+      POSTGRES_DB: airvision
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: airvision-backend
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/airvision
+      SPRING_DATASOURCE_USERNAME: airvision
+      SPRING_DATASOURCE_PASSWORD: airvision
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      SPRING_JPA_SHOW_SQL: "true"
+
+volumes:
+  postgres_data:
