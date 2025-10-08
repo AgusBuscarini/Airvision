@@ -9,7 +9,7 @@ import java.util.UUID;
 public class FlightRoute {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue (strategy = GenerationType.UUID)
     private UUID id;
 
     @ManyToOne
