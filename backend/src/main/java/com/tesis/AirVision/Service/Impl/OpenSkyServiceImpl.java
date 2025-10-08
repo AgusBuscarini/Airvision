@@ -48,6 +48,14 @@ public class OpenSkyServiceImpl implements OpenSkyService {
         return flights;
     }
 
+    public List<ExternalFlightDto> getFlightsLimited(int limit) {
+        List<ExternalFlightDto> allFlights = getAllFlights();
+        return allFlights.stream()
+                .filter(f -> f.getLat() != null && f.getLon() != null)
+                .limit(limit)
+                .toList();
+    }
+
     private ExternalFlightDto parseState(JsonNode node) {
         return ExternalFlightDto.builder()
                 .icao24(getText(node, 0))
