@@ -8,4 +8,5 @@ import java.util.List;
 @Service
 public interface OpenSkyService {
     List<ExternalFlightDto> getAllFlights();
+    List<ExternalFlightDto> getFlightsLimited(int limit);
 }
