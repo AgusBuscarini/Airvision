@@ -2,7 +2,7 @@ package com.tesis.AirVision.Service.Impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.tesis.AirVision.Service.OpenSkyService;
-import com.tesis.AirVision.dtos.ExternalFlightDto;
+import com.tesis.AirVision.Dtos.ExternalFlightDto;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
