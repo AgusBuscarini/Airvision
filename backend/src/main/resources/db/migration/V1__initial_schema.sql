@@ -3,7 +3,7 @@ CREATE TYPE airline_t AS ENUM ('GLOBAL', 'PRIVATE');
 CREATE TYPE source_t AS ENUM ('API', 'SIMULATED');
 
 CREATE TABLE users (
-                       id UUID PRIMARY KEY,
+                       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                        name TEXT NOT NULL,
                        email TEXT UNIQUE NOT NULL,
                        password_hash TEXT NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE airlines (
-                          id UUID PRIMARY KEY,
+                          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                           name TEXT NOT NULL,
                           type airline_t NOT NULL,
                           owner_user_id UUID NULL REFERENCES users(id),
@@ -24,7 +24,7 @@ CREATE TABLE airlines (
 );
 
 CREATE TABLE airports (
-                          id UUID PRIMARY KEY,
+                          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                           name TEXT NOT NULL,
                           city TEXT NOT NULL,
                           country TEXT NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE airports (
 );
 
 CREATE TABLE flight_routes (
-                               id UUID PRIMARY KEY,
+                               id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                airline_id UUID REFERENCES airlines(id),
                                origin_airport_id UUID REFERENCES airports(id),
                                destination_airport_id UUID REFERENCES airports(id),
@@ -45,7 +45,7 @@ CREATE TABLE flight_routes (
 );
 
 CREATE TABLE flights (
-                         id UUID PRIMARY KEY,
+                         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                          source source_t NOT NULL,
                          icao24 TEXT NOT NULL,
                          callsign TEXT NULL,
