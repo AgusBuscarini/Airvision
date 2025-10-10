@@ -48,6 +48,7 @@ public class OpenSkyServiceImpl implements OpenSkyService {
         return flights;
     }
 
+    @Override
     public List<ExternalFlightDto> getFlightsLimited(int limit) {
         List<ExternalFlightDto> allFlights = getAllFlights();
         return allFlights.stream()

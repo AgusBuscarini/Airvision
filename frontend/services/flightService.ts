@@ -12,7 +12,7 @@ export interface ExternalFlight {
   lastContactTs: string;
 }
 
-const BASE_URL = "http://localhost:8080/api/flights/limit?limit=500";
+const BASE_URL = "http://localhost:8080/api/flights/scheduled";
 
 export async function getFlights(): Promise<ExternalFlight[]> {
   const response = await fetch(BASE_URL);
