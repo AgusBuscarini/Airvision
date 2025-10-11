@@ -118,6 +118,8 @@ export default function AirMap() {
       }
     };
     fetchFlights();
+    const interval = setInterval(fetchFlights, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
