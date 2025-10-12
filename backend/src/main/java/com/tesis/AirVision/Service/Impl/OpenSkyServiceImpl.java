@@ -15,18 +15,8 @@ import java.util.List;
 public class OpenSkyServiceImpl implements OpenSkyService {
     public final WebClient webClient;
 
-    public OpenSkyServiceImpl() {
-        ExchangeStrategies strategies = ExchangeStrategies.builder()
-                .codecs(configurer -> configurer
-                        .defaultCodecs()
-                        .maxInMemorySize(16 * 1024 * 1024)) // 16 MB
-                .build();
-
-        this.webClient = WebClient.builder()
-                .baseUrl("https://opensky-network.org/api")
-                .exchangeStrategies(strategies)
-                .defaultHeader("User-Agent", "AirVision/1.0")
-                .build();
+    public OpenSkyServiceImpl(WebClient webClient) {
+        this.webClient = webClient;
     }
 
     @Override
