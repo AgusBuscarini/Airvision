@@ -1,6 +1,10 @@
 package com.tesis.AirVision.Entity;
 
+import com.tesis.AirVision.Enums.Role;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -22,15 +26,13 @@ public class User {
     private String passwordHash;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "role", columnDefinition = "role_t")
     private Role role = Role.USER;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 
-    public enum Role {
-        ADMIN, USER
-    }
 
     public UUID getId() {
         return id;
