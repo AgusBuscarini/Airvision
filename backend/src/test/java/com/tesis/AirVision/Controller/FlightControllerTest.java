@@ -1,6 +1,6 @@
 package com.tesis.AirVision.Controller;
 
-import com.tesis.AirVision.Dtos.ExternalFlightDto;
+import com.tesis.AirVision.Dtos.Flight.ExternalFlightDto;
 import com.tesis.AirVision.Service.FlightScheduledService;
 import com.tesis.AirVision.Service.OpenSkyService;
 import org.junit.jupiter.api.Test;

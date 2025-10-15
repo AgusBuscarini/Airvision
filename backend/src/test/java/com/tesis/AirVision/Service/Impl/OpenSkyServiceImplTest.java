@@ -2,8 +2,7 @@ package com.tesis.AirVision.Service.Impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tesis.AirVision.Dtos.ExternalFlightDto;
-import com.tesis.AirVision.Service.OpenSkyService;
+import com.tesis.AirVision.Dtos.Flight.ExternalFlightDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
