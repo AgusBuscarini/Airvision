@@ -1,4 +1,4 @@
-package com.tesis.AirVision.Dtos;
+package com.tesis.AirVision.Dtos.Flight;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
