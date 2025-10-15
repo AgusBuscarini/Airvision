@@ -15,14 +15,53 @@ public class PrivateFlightServiceImpl implements PrivateFlightService {
     @Override
     public List<PrivateFlightDto> getPrivateFlights() {
         return Arrays.asList(
-                new PrivateFlightDto(UUID.randomUUID(), "PRV001", "Córdoba", "Mendoza",
-                        "Learjet 45", -31.4, -64.2, 10500.0, 720.0, OffsetDateTime.now()),
+                PrivateFlightDto.builder()
+                        .icao24(UUID.randomUUID())
+                        .callsign("PRV001")
+                        .originCountry("Córdoba")
+                        .destination("Mendoza")
+                        .aircraftModel("Learjet 45")
+                        .lat(-31.4)
+                        .lon(-64.2)
+                        .baroAltitude(10500.0)
+                        .velocity(720.0)
+                        .trueTrack(275.0)
+                        .verticalRate(0.0)
+                        .onGround(false)
+                        .lastContactTs(OffsetDateTime.now())
+                        .build(),
 
-                new PrivateFlightDto(UUID.randomUUID(), "PRV002", "Buenos Aires", "Santiago de Chile",
-                        "Cessna Citation X", -34.6, -58.4, 11000.0, 800.0, OffsetDateTime.now()),
+                PrivateFlightDto.builder()
+                        .icao24(UUID.randomUUID())
+                        .callsign("PRV002")
+                        .originCountry("Buenos Aires")
+                        .destination("Santiago de Chile")
+                        .aircraftModel("Cessna Citation X")
+                        .lat(-34.6)
+                        .lon(-58.4)
+                        .baroAltitude(11000.0)
+                        .velocity(800.0)
+                        .trueTrack(260.0)
+                        .verticalRate(-1.5)
+                        .onGround(false)
+                        .lastContactTs(OffsetDateTime.now())
+                        .build(),
 
-                new PrivateFlightDto(UUID.randomUUID(), "PRV003", "Rosario", "Asunción",
-                        "Gulfstream G650", -32.9, -60.7, 12000.0, 850.0, OffsetDateTime.now())
+                PrivateFlightDto.builder()
+                        .icao24(UUID.randomUUID())
+                        .callsign("PRV003")
+                        .originCountry("Rosario")
+                        .destination("Asunción")
+                        .aircraftModel("Gulfstream G650")
+                        .lat(-32.9)
+                        .lon(-60.7)
+                        .baroAltitude(12000.0)
+                        .velocity(850.0)
+                        .trueTrack(310.0)
+                        .verticalRate(0.5)
+                        .onGround(false)
+                        .lastContactTs(OffsetDateTime.now())
+                        .build()
         );
     }
 }
