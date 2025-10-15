@@ -7,7 +7,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import L from "leaflet";
 import "leaflet.markercluster";
 import { useEffect, useState } from "react";
-import { getFlights, ExternalFlight } from "../services/flightService";
+import { getFlights, getPrivateFlights, ExternalFlight } from "../services/flightService";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -22,59 +22,59 @@ function FlightClusters({ flights }: { flights: ExternalFlight[] }) {
   useEffect(() => {
     if (!map) return;
 
-    const markers = L.markerClusterGroup({chunkedLoading: true, iconCreateFunction: (cluster:any) => {
-    const count = cluster.getChildCount();
-
-    return L.divIcon({
-      html: `
-        <div style="
-          position: relative;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 48px;
-          height: 48px;
-          border-radius: 50%;
-          background: radial-gradient(circle at center, #2563eb 40%, #1e3a8a 100%);
-          box-shadow: 0 0 10px rgba(0,0,0,0.4);
-        ">
-          <div style="
-            position: absolute;
-            width: 70%;
-            height: 70%;
-            border: 2px solid rgba(255,255,255,0.6);
-            border-radius: 50%;
-            animation: radarPulse 2s infinite ease-out;
-          "></div>
-          <span style="
-            color: white;
-            font-weight: bold;
-            font-size: 13px;
-            text-shadow: 0 0 3px #000;
-          ">
-            ${count}
-          </span>
-        </div>
-      `,
-      className: "cluster-icon",
-      iconSize: [48, 48],
+    const markers = L.markerClusterGroup({
+      chunkedLoading: true,
+      iconCreateFunction: (cluster: any) => {
+        const count = cluster.getChildCount();
+        return L.divIcon({
+          html: `
+            <div style="
+              position: relative;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              width: 48px;
+              height: 48px;
+              border-radius: 50%;
+              background: radial-gradient(circle at center, #2563eb 40%, #1e3a8a 100%);
+              box-shadow: 0 0 10px rgba(0,0,0,0.4);
+            ">
+              <div style="
+                position: absolute;
+                width: 70%;
+                height: 70%;
+                border: 2px solid rgba(255,255,255,0.6);
+                border-radius: 50%;
+                animation: radarPulse 2s infinite ease-out;
+              "></div>
+              <span style="
+                color: white;
+                font-weight: bold;
+                font-size: 13px;
+                text-shadow: 0 0 3px #000;
+              ">
+                ${count}
+              </span>
+            </div>
+          `,
+          className: "cluster-icon",
+          iconSize: [48, 48],
+        });
+      },
     });
-  },
-});
-
 
     flights
       .filter((f) => f.lat && f.lon)
       .forEach((f) => {
         const rotation = ((f.trueTrack ?? 0) - 90 + 360) % 360;
-        const color = "#3b82f6";
+        const color = f.isPrivate ? "#22c55e" : "#3b82f6";
 
         const icon = L.divIcon({
           html: `
             <div style="
               transform: rotate(${rotation}deg);
               color: ${color};
-              font-size: 20px;
+              font-size: 26px;
               text-shadow: 0 0 2px #000, 0 0 4px #000;
             ">
               ✈
@@ -97,44 +97,75 @@ function FlightClusters({ flights }: { flights: ExternalFlight[] }) {
       });
 
     map.addLayer(markers);
-    return () => {map.removeLayer(markers)
+
+    return () => {
+      map.removeLayer(markers);
     };
   }, [flights, map]);
 
   return null;
 }
 
-
 export default function AirMap() {
   const [flights, setFlights] = useState<ExternalFlight[]>([]);
+  const [showRealFlights, setShowRealFlights] = useState(true);
 
   useEffect(() => {
     const fetchFlights = async () => {
       try {
-        const data = await getFlights();
-        setFlights(data);
+        const [publicFlights, privateFlights] = await Promise.all([
+          getFlights(),
+          getPrivateFlights(),
+        ]);
+        setFlights([...publicFlights, ...privateFlights]);
       } catch (error) {
         console.error("Error al obtener vuelos:", error);
       }
     };
+
     fetchFlights();
     const interval = setInterval(fetchFlights, 30000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <MapContainer
-      center={[0, 0]}
-      zoom={2}
-      style={{ height: "100vh", width: "100%" }}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">
-          OpenStreetMap</a> contributors'
-      />
+    <div style={{ position: "relative" }}>
+      <button
+        onClick={() => setShowRealFlights(!showRealFlights)}
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          zIndex: 1000,
+          padding: "8px 12px",
+          backgroundColor: showRealFlights ? "#22c55e" : "#3b82f6",
+          color: "white",
+          fontWeight: "bold",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+          transition: "all 0.3s ease",
+        }}
+      >
+        {showRealFlights ? "Ocultar vuelos reales" : "Mostrar vuelos reales"}
+      </button>
 
-      <FlightClusters flights={flights} />
-    </MapContainer>
+      <MapContainer
+        center={[0, 0]}
+        zoom={2}
+        style={{ height: "100vh", width: "100%" }}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">
+            OpenStreetMap</a> contributors'
+        />
+
+        <FlightClusters
+          flights={showRealFlights ? flights : flights.filter((f) => f.isPrivate)}
+        />
+      </MapContainer>
+    </div>
   );
 }
