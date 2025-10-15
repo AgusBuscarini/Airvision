@@ -1,8 +1,9 @@
 package com.tesis.AirVision.Service.Impl;
 
-import com.tesis.AirVision.Dtos.LoginRequest;
-import com.tesis.AirVision.Dtos.LoginResponse;
+import com.tesis.AirVision.Dtos.Login.LoginRequest;
+import com.tesis.AirVision.Dtos.Login.LoginResponse;
 import com.tesis.AirVision.Entity.User;
+import com.tesis.AirVision.Enums.Role;
 import com.tesis.AirVision.Repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ class AuthServiceImplTest {
         user = new User();
         user.setEmail("test@test.com");
         user.setPasswordHash("test123");
-        user.setRole(User.Role.USER);
+        user.setRole(Role.USER);
     }
 
     @Test

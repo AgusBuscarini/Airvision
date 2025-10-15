@@ -1,8 +1,8 @@
 package com.tesis.AirVision.Controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tesis.AirVision.Dtos.LoginRequest;
-import com.tesis.AirVision.Dtos.LoginResponse;
+import com.tesis.AirVision.Dtos.Login.LoginRequest;
+import com.tesis.AirVision.Dtos.Login.LoginResponse;
 import com.tesis.AirVision.Service.AuthService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

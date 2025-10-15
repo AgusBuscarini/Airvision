@@ -1,4 +1,4 @@
-package com.tesis.AirVision.Dtos;
+package com.tesis.AirVision.Dtos.Login;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class LoginResponse {
-    private String message;
-    private String role;
+public class LoginRequest {
+    private String email;
+    private String password;
 }
