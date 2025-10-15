@@ -54,4 +54,10 @@ public class AuthServiceImpl implements AuthService {
 
         return new RegisterResponse("Usuario registrado con éxito");
     }
+
+    @Override
+    public void logout() {
+        // Por ahora imprimimos el evento de logout, mas adelante agregamos JWT
+        System.out.println("Logout ejecutado correctamente.");
+    }
 }
