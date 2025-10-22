@@ -1,4 +1,3 @@
-// frontend/components/LogoutButton.tsx
 "use client";
 
 import { useAuth } from "@/context/authContext";
