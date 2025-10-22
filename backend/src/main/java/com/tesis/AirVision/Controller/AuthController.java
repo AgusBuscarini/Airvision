@@ -8,11 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class AuthController {
@@ -24,14 +21,13 @@ public class AuthController {
 
         LoginResponse response = authService.login(request);
 
-        switch (response.getMessage()) {
-            case "Login exitoso":
-                return ResponseEntity.ok(response);
-            case "Usuario no encontrado":
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-            default:
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
+        return switch (response.getMessage()) {
+            case "Login exitoso" -> ResponseEntity.ok(response);
+            case "Usuario no encontrado" -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            case "Credenciales invalidas"  -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            case "Los datos ingresados no son válidos" -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        };
     }
 
     @PostMapping("/register")
@@ -39,20 +35,11 @@ public class AuthController {
 
         RegisterResponse response = authService.register(request);
 
-        if ("Usuario registrado con éxito".equals(response.getMessage())) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } else if ("El email ya está registrado".equals(response.getMessage())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout() {
-        authService.logout();
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "Sesión cerrada correctamente");
-        return ResponseEntity.ok(response);
+        return switch (response.getMessage()) {
+            case "Usuario registrado correctamente" -> ResponseEntity.ok(response);
+            case "El email ya esta registrado"  -> ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+            case "Los datos ingresados no son validos"   -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        };
     }
 }

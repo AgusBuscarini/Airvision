@@ -7,12 +7,17 @@ import com.tesis.AirVision.Dtos.Register.RegisterResponse;
 import com.tesis.AirVision.Entity.User;
 import com.tesis.AirVision.Enums.Role;
 import com.tesis.AirVision.Repository.UserRepository;
+import com.tesis.AirVision.Security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
@@ -24,6 +29,18 @@ import static org.mockito.Mockito.*;
 class AuthServiceImplTest {
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtService jwtService;
+
+    @Mock
+    private AuthenticationManager authenticationManager;
+
+    @Mock
+    private UserDetailsService userDetailsService;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -40,16 +57,20 @@ class AuthServiceImplTest {
 
     @Test
     void login_Successful() {
-        when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByEmail(any())).thenReturn(Optional.of(user));
 
         LoginRequest request = new LoginRequest();
         request.setEmail("test@test.com");
         request.setPassword("test123");
 
+        when(userDetailsService.loadUserByUsername("test@test.com")).thenReturn(user);
+        when(jwtService.generateToken(user)).thenReturn("mockedToken");
+
         LoginResponse loginResponse = authService.login(request);
 
         assertEquals("Login exitoso", loginResponse.getMessage());
         assertEquals("USER", loginResponse.getRole());
+        assertEquals("mockedToken", loginResponse.getToken());
     }
 
     @Test
@@ -60,16 +81,17 @@ class AuthServiceImplTest {
         request.setEmail("test@test.com");
         request.setPassword("testWrong");
 
+        doThrow(new AuthenticationException("Credenciales invalidas") {}).when(authenticationManager)
+                .authenticate(any());
+
         LoginResponse loginResponse = authService.login(request);
 
-        assertEquals("Credenciales inválidas", loginResponse.getMessage());
+        assertEquals("Credenciales invalidas", loginResponse.getMessage());
         assertNull(loginResponse.getRole());
     }
 
     @Test
     void login_NotFound() {
-        when(userRepository.findByEmail("testNotFound@test.com")).thenReturn(Optional.empty());
-
         LoginRequest request = new LoginRequest();
         request.setEmail("testNotFound@test.com");
         request.setPassword("test");
@@ -89,7 +111,7 @@ class AuthServiceImplTest {
 
         RegisterResponse response = authService.register(request);
 
-        assertEquals("Los datos ingresados no son válidos", response.getMessage());
+        assertEquals("Los datos ingresados no son validos", response.getMessage());
         verify(userRepository, never()).findByEmail(any());
         verify(userRepository, never()).save(any());
     }
@@ -106,7 +128,7 @@ class AuthServiceImplTest {
 
         RegisterResponse response = authService.register(request);
 
-        assertEquals("El email ya está registrado", response.getMessage());
+        assertEquals("El email ya esta registrado", response.getMessage());
         verify(userRepository, times(1)).findByEmail("test@test.com");
         verify(userRepository, never()).save(any());
     }
@@ -120,21 +142,12 @@ class AuthServiceImplTest {
 
         when(userRepository.findByEmail("nuevo@test.com"))
                 .thenReturn(Optional.empty());
+        when(passwordEncoder.encode(anyString())).thenReturn("encoded123");
 
         RegisterResponse response = authService.register(request);
 
-        assertEquals("Usuario registrado con éxito", response.getMessage());
+        assertEquals("Usuario registrado correctamente", response.getMessage());
         verify(userRepository, times(1)).findByEmail("nuevo@test.com");
         verify(userRepository, times(1)).save(any(User.class));
-    }
-
-    @Test
-    void logout_ShouldPrintMessage() {
-        java.io.ByteArrayOutputStream outContent = new java.io.ByteArrayOutputStream();
-        System.setOut(new java.io.PrintStream(outContent));
-
-        authService.logout();
-
-        assertTrue(outContent.toString().contains("Logout ejecutado correctamente."));
     }
 }
