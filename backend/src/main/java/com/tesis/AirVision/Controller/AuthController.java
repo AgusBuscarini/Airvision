@@ -28,6 +28,7 @@ public class AuthController {
             case "Login exitoso" -> ResponseEntity.ok(response);
             case "Usuario no encontrado" -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             case "Credenciales invalidas"  -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            case "Los datos ingresados no son válidos" -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         };
     }
@@ -40,7 +41,7 @@ public class AuthController {
         return switch (response.getMessage()) {
             case "Usuario registrado correctamente" -> ResponseEntity.ok(response);
             case "El email ya esta registrado"  -> ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-            case "Datos invalidos"   -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            case "Los datos ingresados no son validos"   -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         };
     }
