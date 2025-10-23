@@ -3,22 +3,29 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/services/userService";
+import { useAuth } from "@/context/authContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     try {
-      await loginUser({ email, password });
-      router.push("/map");
-    } catch {
-      setError("Usuario o contraseña incorrectos");
+      const response = await loginUser({ email, password });
+      if (response.token) {
+        login(response.token);
+        router.push("/map")
+      } else {
+        setError(response.message || "Error inesperado: no se recibio token")
+      }
+    } catch(error: any) {
+      setError(error.message || "Error desconocido al iniciar sesion");
     }
   };
 

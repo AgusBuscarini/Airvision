@@ -5,9 +5,11 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import L from "leaflet";
+import { LatLngBoundsExpression } from "leaflet";
 import "leaflet.markercluster";
 import { useEffect, useState } from "react";
 import { getFlights, getPrivateFlights, ExternalFlight } from "../services/flightService";
+import LogoutButton from "./logoutButton";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -106,6 +108,11 @@ function FlightClusters({ flights }: { flights: ExternalFlight[] }) {
   return null;
 }
 
+const worldBounds: LatLngBoundsExpression = [
+  [-90, -180],
+  [90, 180]
+];
+
 export default function AirMap() {
   const [flights, setFlights] = useState<ExternalFlight[]>([]);
   const [showRealFlights, setShowRealFlights] = useState(true);
@@ -130,11 +137,12 @@ export default function AirMap() {
 
   return (
     <div style={{ position: "relative" }}>
+      <LogoutButton />
       <button
         onClick={() => setShowRealFlights(!showRealFlights)}
         style={{
           position: "absolute",
-          top: "10px",
+          top: "55px",
           right: "10px",
           zIndex: 1000,
           padding: "8px 12px",
@@ -152,9 +160,12 @@ export default function AirMap() {
       </button>
 
       <MapContainer
-        center={[0, 0]}
+        center={[20, 0]}
         zoom={2}
+        minZoom={2}
         style={{ height: "100vh", width: "100%" }}
+        maxBounds={worldBounds}
+        maxBoundsViscosity={1.0}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
