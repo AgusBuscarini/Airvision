@@ -10,6 +10,8 @@ import "leaflet.markercluster";
 import { useEffect, useState } from "react";
 import { getFlights, getPrivateFlights, ExternalFlight } from "../services/flightService";
 import LogoutButton from "./logoutButton";
+import AirlineModal, { AirlineFormData } from "../components/airlineModal";
+import FlightModal, { FlightFormData } from "../components/flightsModal";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -116,7 +118,39 @@ const worldBounds: LatLngBoundsExpression = [
 export default function AirMap() {
   const [flights, setFlights] = useState<ExternalFlight[]>([]);
   const [showRealFlights, setShowRealFlights] = useState(true);
+  const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
+  const [isAirlineModalOpen, setIsAirlineModalOpen] = useState(false);
 
+  const handleOpenAirlineModal = () => {
+    setIsFlightModalOpen(false);
+    setIsAirlineModalOpen(true);
+  };
+
+  const handleCloseAirlineModal = () => {
+    setIsAirlineModalOpen(false);
+  };
+
+  const handleOpenFlightModal = () => {
+    setIsAirlineModalOpen(false);
+    setIsFlightModalOpen(true);
+  };
+
+  const handleCloseFlightModal = () => {
+    setIsFlightModalOpen(false);
+  };
+
+  const handleAirlineSubmit = async (formData: AirlineFormData) => {
+    console.log("Datos de la aerolinea a enviar:", formData);
+    // AQUÍ VA LA LÓGICA PARA LLAMAR AL SERVICIO QUE CREA EL VUELO EN EL BACKEND
+     handleCloseAirlineModal();
+  };
+
+  const handleFlightSubmit = async (formData: FlightFormData) => {
+    console.log("Datos del vuelo a enviar:", formData);
+    // AQUÍ VA LA LÓGICA PARA LLAMAR AL SERVICIO QUE CREA LA AEROLINEA EN EL BACKEND
+     handleCloseFlightModal();
+  };
+  
   useEffect(() => {
     const fetchFlights = async () => {
       try {
@@ -159,6 +193,46 @@ export default function AirMap() {
         {showRealFlights ? "Ocultar vuelos reales" : "Mostrar vuelos reales"}
       </button>
 
+      <button
+        onClick={handleOpenAirlineModal}
+        style={{
+          position: "absolute",
+          top: "100px",
+          right: "10px",
+          zIndex: 1000,
+          padding: "8px 12px",
+          backgroundColor: "#f59e0b",
+          color: "white",
+          fontWeight: "bold",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+        }}
+      >
+        Crear Aerolinea
+      </button>
+
+      <button
+        onClick={handleOpenFlightModal}
+        style={{
+          position: "absolute",
+          top: "145px",
+          right: "10px",
+          zIndex: 1000,
+          padding: "8px 12px",
+          backgroundColor: "#f59e0b",
+          color: "white",
+          fontWeight: "bold",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+          boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+        }}
+      >
+        Crear Vuelo
+      </button>
+
       <MapContainer
         center={[20, 0]}
         zoom={2}
@@ -177,6 +251,17 @@ export default function AirMap() {
           flights={showRealFlights ? flights : flights.filter((f) => f.isPrivate)}
         />
       </MapContainer>
+      
+      <AirlineModal
+        isOpen={isAirlineModalOpen}
+        onClose={handleCloseAirlineModal}
+        onSubmit={handleAirlineSubmit}
+      />
+       <FlightModal
+        isOpen={isFlightModalOpen}
+        onClose={handleCloseFlightModal}
+        onSubmit={handleFlightSubmit}
+      />
     </div>
   );
 }
