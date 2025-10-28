@@ -52,7 +52,7 @@ class AuthServiceImplTest {
         user = new User();
         user.setEmail("test@test.com");
         user.setPasswordHash("test123");
-        user.setRole(Role.USER);
+        user.setRole(Role.USER_FREE);
     }
 
     @Test
@@ -69,7 +69,7 @@ class AuthServiceImplTest {
         LoginResponse loginResponse = authService.login(request);
 
         assertEquals("Login exitoso", loginResponse.getMessage());
-        assertEquals("USER", loginResponse.getRole());
+        assertEquals("USER_FREE", loginResponse.getRole());
         assertEquals("mockedToken", loginResponse.getToken());
     }
 
