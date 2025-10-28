@@ -7,11 +7,16 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import L from "leaflet";
 import { LatLngBoundsExpression } from "leaflet";
 import "leaflet.markercluster";
-import { useEffect, useState } from "react";
-import { getFlights, getPrivateFlights, ExternalFlight } from "../services/flightService";
+import { useEffect, useState, useMemo } from "react";
+import {
+  getFlights,
+  getPrivateFlights,
+  ExternalFlight,
+} from "../services/flightService";
 import LogoutButton from "./logoutButton";
 import AirlineModal, { AirlineFormData } from "../components/airlineModal";
 import FlightModal, { FlightFormData } from "../components/flightsModal";
+import AirlineManagementModal from "./airlineAdminManagement";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -19,6 +24,23 @@ L.Icon.Default.mergeOptions({
   iconUrl: "/leaflet/marker-icon.png",
   shadowUrl: "/leaflet/marker-shadow.png",
 });
+
+const FilterIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-5 h-5"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.572a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
+    />
+  </svg>
+);
 
 function FlightClusters({ flights }: { flights: ExternalFlight[] }) {
   const map = useMap();
@@ -112,17 +134,45 @@ function FlightClusters({ flights }: { flights: ExternalFlight[] }) {
 
 const worldBounds: LatLngBoundsExpression = [
   [-90, -180],
-  [90, 180]
+  [90, 180],
 ];
+
+interface Filters {
+  minAltitude: number | null;
+  maxAltitude: number | null;
+  minSpeed: number | null;
+  maxSpeed: number | null;
+  onGround: boolean | null;
+  flightType: "all" | "public" | "private";
+}
+
+const initialFilters: Filters = {
+  minAltitude: null,
+  maxAltitude: null,
+  minSpeed: null,
+  maxSpeed: null,
+  onGround: null,
+  flightType: "all",
+};
 
 export default function AirMap() {
   const [flights, setFlights] = useState<ExternalFlight[]>([]);
-  const [showRealFlights, setShowRealFlights] = useState(true);
   const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
   const [isAirlineModalOpen, setIsAirlineModalOpen] = useState(false);
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filters, setFilters] = useState<Filters>(initialFilters);
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+
+  const [isAirlineManagementModalOpen, setIsAirlineManagementModalOpen] =
+    useState(false);
+
+  const userRole = "ADMIN";
+
   const handleOpenAirlineModal = () => {
     setIsFlightModalOpen(false);
+    setIsFilterMenuOpen(false);
+    setIsAirlineManagementModalOpen(false);
     setIsAirlineModalOpen(true);
   };
 
@@ -132,6 +182,8 @@ export default function AirMap() {
 
   const handleOpenFlightModal = () => {
     setIsAirlineModalOpen(false);
+    setIsFilterMenuOpen(false);
+    setIsAirlineManagementModalOpen(false);
     setIsFlightModalOpen(true);
   };
 
@@ -139,18 +191,29 @@ export default function AirMap() {
     setIsFlightModalOpen(false);
   };
 
+  const handleOpenAirlineManagementModal = () => {
+    setIsFlightModalOpen(false);
+    setIsAirlineModalOpen(false);
+    setIsFilterMenuOpen(false);
+    setIsAirlineManagementModalOpen(true);
+  };
+
+  const handleCloseAirlineManagementModal = () => {
+    setIsAirlineManagementModalOpen(false);
+  };
+
   const handleAirlineSubmit = async (formData: AirlineFormData) => {
     console.log("Datos de la aerolinea a enviar:", formData);
     // AQUÍ VA LA LÓGICA PARA LLAMAR AL SERVICIO QUE CREA EL VUELO EN EL BACKEND
-     handleCloseAirlineModal();
+    handleCloseAirlineModal();
   };
 
   const handleFlightSubmit = async (formData: FlightFormData) => {
     console.log("Datos del vuelo a enviar:", formData);
     // AQUÍ VA LA LÓGICA PARA LLAMAR AL SERVICIO QUE CREA LA AEROLINEA EN EL BACKEND
-     handleCloseFlightModal();
+    handleCloseFlightModal();
   };
-  
+
   useEffect(() => {
     const fetchFlights = async () => {
       try {
@@ -169,29 +232,399 @@ export default function AirMap() {
     return () => clearInterval(interval);
   }, []);
 
+  const filteredFlights = useMemo(() => {
+    return flights.filter((flight) => {
+      // Filtro por búsqueda (callsign u originCountry)
+      const searchTermLower = searchTerm.toLowerCase();
+      const matchesSearch =
+        searchTermLower === "" ||
+        (flight.callsign &&
+          flight.callsign.toLowerCase().includes(searchTermLower)) ||
+        (flight.originCountry &&
+          flight.originCountry.toLowerCase().includes(searchTermLower));
+
+      if (!matchesSearch) return false;
+
+      // Filtro por tipo de vuelo
+      if (filters.flightType === "public" && flight.isPrivate) return false;
+      if (filters.flightType === "private" && !flight.isPrivate) return false;
+
+      // Filtro por estado en tierra
+      if (filters.onGround !== null && flight.onGround !== filters.onGround)
+        return false;
+
+      // Filtro por altitud mínima
+      if (
+        filters.minAltitude !== null &&
+        (flight.baroAltitude ?? -Infinity) < filters.minAltitude
+      )
+        return false;
+
+      // Filtro por altitud máxima
+      if (
+        filters.maxAltitude !== null &&
+        (flight.baroAltitude ?? Infinity) > filters.maxAltitude
+      )
+        return false;
+
+      // Filtro por velocidad mínima
+      if (
+        filters.minSpeed !== null &&
+        (flight.velocity ?? -Infinity) < filters.minSpeed
+      )
+        return false;
+
+      // Filtro por velocidad máxima
+      if (
+        filters.maxSpeed !== null &&
+        (flight.velocity ?? Infinity) > filters.maxSpeed
+      )
+        return false;
+
+      return true;
+    });
+  }, [flights, searchTerm, filters]);
+
+  const handleFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value, type } = e.target;
+
+    if (type === "checkbox") {
+      const { checked } = e.target as HTMLInputElement;
+      if (name === "onGroundToggle") {
+        setFilters((prev) => ({ ...prev, onGround: checked ? true : null }));
+      } else if (name === "inAirToggle") {
+        setFilters((prev) => ({ ...prev, onGround: checked ? false : null }));
+      }
+    } else if (type === "number") {
+      setFilters((prev) => ({
+        ...prev,
+        [name]: value === "" ? null : Number(value),
+      }));
+    } else {
+      setFilters((prev) => ({ ...prev, [name]: value as any }));
+    }
+  };
+
+  const resetFilters = () => {
+    setFilters(initialFilters);
+  };
+
   return (
     <div style={{ position: "relative" }}>
       <LogoutButton />
-      <button
-        onClick={() => setShowRealFlights(!showRealFlights)}
+      <div
         style={{
           position: "absolute",
-          top: "55px",
-          right: "10px",
+          top: "10px",
+          left: "50px",
           zIndex: 1000,
-          padding: "8px 12px",
-          backgroundColor: showRealFlights ? "#22c55e" : "#3b82f6",
-          color: "white",
-          fontWeight: "bold",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          gap: "10px",
+          background: "rgba(255, 255, 255, 0.8)",
+          padding: "8px",
+          borderRadius: "8px",
           boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-          transition: "all 0.3s ease",
         }}
       >
-        {showRealFlights ? "Ocultar vuelos reales" : "Mostrar vuelos reales"}
-      </button>
+        {/* Barra de Búsqueda */}
+        <input
+          type="text"
+          placeholder="Buscar por Callsign o País..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{
+            padding: "8px 12px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            width: "250px",
+            color: "#333",
+          }}
+        />
+
+        {/* Botón de Filtros */}
+        <button
+          onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+          style={{
+            padding: "8px",
+            background: "#f0f0f0",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#333",
+          }}
+          title="Abrir filtros"
+        >
+          <FilterIcon />
+        </button>
+
+        {/* Menú Desplegable de Filtros */}
+        {isFilterMenuOpen && (
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 5px)",
+              left: 0,
+              background: "white",
+              borderRadius: "6px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              padding: "15px",
+              width: "300px",
+              zIndex: 1010,
+              color: "#333",
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px",
+            }}
+          >
+            <h3
+              style={{
+                margin: 0,
+                fontWeight: "bold",
+                borderBottom: "1px solid #eee",
+                paddingBottom: "8px",
+              }}
+            >
+              Filtros
+            </h3>
+
+            {/* Tipo de Vuelo */}
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "14px",
+                  marginBottom: "4px",
+                }}
+              >
+                Tipo de Vuelo:
+              </label>
+              <select
+                name="flightType"
+                value={filters.flightType}
+                onChange={handleFilterChange}
+                style={{
+                  width: "100%",
+                  padding: "6px",
+                  borderRadius: "4px",
+                  border: "1px solid #ccc",
+                }}
+              >
+                <option value="all">Todos</option>
+                <option value="public">Públicos</option>
+                <option value="private">Privados</option>
+              </select>
+            </div>
+
+            {/* Estado */}
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <label style={{ fontSize: "14px" }}>Estado:</label>
+              <label style={{ fontSize: "14px", cursor: "pointer" }}>
+                <input
+                  type="radio"
+                  name="onGround"
+                  value="null"
+                  checked={filters.onGround === null}
+                  onChange={() =>
+                    setFilters((prev) => ({ ...prev, onGround: null }))
+                  }
+                />{" "}
+                Ambos
+              </label>
+              <label style={{ fontSize: "14px", cursor: "pointer" }}>
+                <input
+                  type="radio"
+                  name="onGround"
+                  value="true"
+                  checked={filters.onGround === true}
+                  onChange={() =>
+                    setFilters((prev) => ({ ...prev, onGround: true }))
+                  }
+                />{" "}
+                En Tierra
+              </label>
+              <label style={{ fontSize: "14px", cursor: "pointer" }}>
+                <input
+                  type="radio"
+                  name="onGround"
+                  value="false"
+                  checked={filters.onGround === false}
+                  onChange={() =>
+                    setFilters((prev) => ({ ...prev, onGround: false }))
+                  }
+                />{" "}
+                En Aire
+              </label>
+            </div>
+
+            {/* Altitud */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "10px",
+              }}
+            >
+              <div>
+                <label
+                  htmlFor="minAltitude"
+                  style={{
+                    display: "block",
+                    fontSize: "14px",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Alt. Mín (m):
+                </label>
+                <input
+                  type="number"
+                  id="minAltitude"
+                  name="minAltitude"
+                  value={filters.minAltitude ?? ""}
+                  onChange={handleFilterChange}
+                  placeholder="Ej: 5000"
+                  style={{
+                    width: "100%",
+                    padding: "6px",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="maxAltitude"
+                  style={{
+                    display: "block",
+                    fontSize: "14px",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Alt. Máx (m):
+                </label>
+                <input
+                  type="number"
+                  id="maxAltitude"
+                  name="maxAltitude"
+                  value={filters.maxAltitude ?? ""}
+                  onChange={handleFilterChange}
+                  placeholder="Ej: 12000"
+                  style={{
+                    width: "100%",
+                    padding: "6px",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Velocidad */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "10px",
+              }}
+            >
+              <div>
+                <label
+                  htmlFor="minSpeed"
+                  style={{
+                    display: "block",
+                    fontSize: "14px",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Vel. Mín (m/s):
+                </label>
+                <input
+                  type="number"
+                  id="minSpeed"
+                  name="minSpeed"
+                  value={filters.minSpeed ?? ""}
+                  onChange={handleFilterChange}
+                  placeholder="Ej: 100"
+                  style={{
+                    width: "100%",
+                    padding: "6px",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="maxSpeed"
+                  style={{
+                    display: "block",
+                    fontSize: "14px",
+                    marginBottom: "4px",
+                  }}
+                >
+                  Vel. Máx (m/s):
+                </label>
+                <input
+                  type="number"
+                  id="maxSpeed"
+                  name="maxSpeed"
+                  value={filters.maxSpeed ?? ""}
+                  onChange={handleFilterChange}
+                  placeholder="Ej: 300"
+                  style={{
+                    width: "100%",
+                    padding: "6px",
+                    borderRadius: "4px",
+                    border: "1px solid #ccc",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Botón Resetear Filtros */}
+            <button
+              onClick={resetFilters}
+              style={{
+                padding: "6px 10px",
+                background: "#e5e7eb",
+                border: "1px solid #d1d5db",
+                borderRadius: "4px",
+                cursor: "pointer",
+                marginTop: "10px",
+              }}
+            >
+              Limpiar Filtros
+            </button>
+          </div>
+        )}
+      </div>
+
+      {userRole === "ADMIN" && (
+        <button
+          onClick={handleOpenAirlineManagementModal}
+          style={{
+            position: "absolute",
+            top: "55px",
+            right: "10px",
+            zIndex: 1000,
+            padding: "8px 12px",
+            backgroundColor: "#6366f1",
+            color: "white",
+            fontWeight: "bold",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+          }}
+        >
+          Gestionar Aerolíneas (Admin)
+        </button>
+      )}
 
       <button
         onClick={handleOpenAirlineModal}
@@ -247,20 +680,22 @@ export default function AirMap() {
             OpenStreetMap</a> contributors'
         />
 
-        <FlightClusters
-          flights={showRealFlights ? flights : flights.filter((f) => f.isPrivate)}
-        />
+        <FlightClusters flights={filteredFlights} />
       </MapContainer>
-      
+
       <AirlineModal
         isOpen={isAirlineModalOpen}
         onClose={handleCloseAirlineModal}
         onSubmit={handleAirlineSubmit}
       />
-       <FlightModal
+      <FlightModal
         isOpen={isFlightModalOpen}
         onClose={handleCloseFlightModal}
         onSubmit={handleFlightSubmit}
+      />
+      <AirlineManagementModal
+        isOpen={isAirlineManagementModalOpen}
+        onClose={handleCloseAirlineManagementModal}
       />
     </div>
   );
