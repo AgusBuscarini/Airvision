@@ -2,5 +2,6 @@ package com.tesis.AirVision.Enums;
 
 public enum Role {
     ADMIN,
-    USER
+    USER_FREE,
+    USER_PREMIUM
 }
