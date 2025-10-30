@@ -43,6 +43,7 @@ public class SecurityConfig {
                         // Premium-only endpoints: Private Flights and Airlines
                         .requestMatchers(HttpMethod.GET, "/api/flights/privates").hasAnyAuthority("ADMIN", "USER_PREMIUM")
                         .requestMatchers(HttpMethod.POST, "/api/airlines").hasAnyAuthority("ADMIN", "USER_PREMIUM")
+                        .requestMatchers(HttpMethod.POST, "/api/flights").hasAnyAuthority("ADMIN", "USER_PREMIUM")
 
                         // All authenticated users can access global flights
                         .requestMatchers(HttpMethod.GET, "/api/flights/realtime", "/api/flights/limit", "/api/flights/scheduled").authenticated()

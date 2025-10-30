@@ -15,4 +15,5 @@ public interface AirlineService {
     Optional<AirlineResponse> updateAirline(UUID airlineId, AirlineRequest airlineRequest);
     void deleteAirline(UUID airlineId);
     AirlineResponse createPrivateAirline(AirlineRequest airlineRequest, User ownerUser);
+    List<AirlineResponse> getMyPrivateAirlines(User ownerUser);
 }

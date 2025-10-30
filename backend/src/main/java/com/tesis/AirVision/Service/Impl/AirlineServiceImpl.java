@@ -73,6 +73,14 @@ public class AirlineServiceImpl implements AirlineService {
         return toAirlineResponseDto(savedAirline);
     }
 
+    @Override
+    public List<AirlineResponse> getMyPrivateAirlines(User ownerUser) {
+        return airlineRepository.findByOwnerUserAndType(ownerUser, Type.PRIVATE)
+                .stream()
+                .map(this::toAirlineResponseDto)
+                .collect(Collectors.toList());
+    }
+
     private AirlineResponse toAirlineResponseDto(Airline airline) {
         return AirlineResponse.builder()
                 .id(airline.getId())
