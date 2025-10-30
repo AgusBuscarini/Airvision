@@ -40,11 +40,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/users/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/admin/airlines/**").hasAuthority("ADMIN") // Ya existía en tu código
 
-                        // User-authenticated endpoints
-                        .requestMatchers(HttpMethod.POST, "/api/airlines").authenticated() // NUEVO: POST /api/airlines requiere autenticación
-
-                        // Premium-only endpoints: Private Flights
+                        // Premium-only endpoints: Private Flights and Airlines
                         .requestMatchers(HttpMethod.GET, "/api/flights/privates").hasAnyAuthority("ADMIN", "USER_PREMIUM")
+                        .requestMatchers(HttpMethod.POST, "/api/airlines").hasAnyAuthority("ADMIN", "USER_PREMIUM")
 
                         // All authenticated users can access global flights
                         .requestMatchers(HttpMethod.GET, "/api/flights/realtime", "/api/flights/limit", "/api/flights/scheduled").authenticated()

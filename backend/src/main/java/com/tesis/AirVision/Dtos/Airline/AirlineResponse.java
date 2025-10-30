@@ -1,5 +1,6 @@
 package com.tesis.AirVision.Dtos.Airline;
 
+import com.tesis.AirVision.Entity.Countries;
 import com.tesis.AirVision.Enums.Type;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,7 @@ public class AirlineResponse {
     private Type type;
     private String iata;
     private String icao;
-    private String countryCode;
+    private Countries country;
     private Boolean active;
 
     private UUID ownerId;
