@@ -36,7 +36,7 @@ public class AirlineServiceImpl implements AirlineService {
            airline.setName(airlineRequest.getName());
            airline.setIata(airlineRequest.getIata());
            airline.setIcao(airlineRequest.getIcao());
-           airline.setCountryCode(airlineRequest.getCountryCode());
+           airline.setCountry(airlineRequest.getCountry());
            airline.setActive(airlineRequest.getActive());
 
            Airline updatedAirline = airlineRepository.save(airline);
@@ -63,7 +63,7 @@ public class AirlineServiceImpl implements AirlineService {
         newAirline.setName(request.getName());
         newAirline.setIata(request.getIata());
         newAirline.setIcao(request.getIcao());
-        newAirline.setCountryCode(request.getCountryCode());
+        newAirline.setCountry(request.getCountry());
         newAirline.setActive(true);
         newAirline.setType(Type.PRIVATE);
         newAirline.setOwnerUser(ownerUser);
@@ -80,7 +80,7 @@ public class AirlineServiceImpl implements AirlineService {
                 .type(airline.getType())
                 .iata(airline.getIata())
                 .icao(airline.getIcao())
-                .countryCode(airline.getCountryCode())
+                .country(airline.getCountry())
                 .active(airline.getActive())
                 .ownerId(airline.getOwnerUser() != null ? airline.getOwnerUser().getId() : null)
                 .build();

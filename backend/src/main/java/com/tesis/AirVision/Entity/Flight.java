@@ -28,7 +28,9 @@ public class Flight {
     @JoinColumn(name = "airline_id")
     private Airline airline;
 
-    private String originCountry;
+    @ManyToOne
+    @JoinColumn(name = "country_code")
+    private Countries country;
 
     private Double lat;
     private Double lon;

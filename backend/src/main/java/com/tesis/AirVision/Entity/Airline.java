@@ -31,7 +31,10 @@ public class Airline {
 
     private String iata;
     private String icao;
-    private String countryCode;
+
+    @ManyToOne
+    @JoinColumn(name = "country_code")
+    private Countries country;
 
     private Boolean active = true;
 
