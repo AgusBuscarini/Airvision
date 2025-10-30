@@ -15,6 +15,30 @@ export interface ExternalFlight {
   isPrivate?: boolean;
 }
 
+export interface CreatePrivateFlightRequest {
+  callsign: string;
+  airlineId: string;
+  icao24?: string;
+  originAirportId?: string;
+  destinationAirportId?: string;
+}
+
+export interface PrivateFlightDto {
+  icao24: string;
+  callsign: string;
+  originCountry: string;
+  lat: number;
+  lon: number;
+  baroAltitude: number;
+  velocity: number;
+  trueTrack: number;
+  verticalRate: number;
+  onGround: boolean;
+  lastContactTs: string;
+  destination: string;
+  aircraftModel: string;
+}
+
 const BASE_URL = "http://localhost:8080/api/flights";
 
 const getAuthHeaders = (): HeadersInit => {
@@ -26,7 +50,7 @@ const getAuthHeaders = (): HeadersInit => {
     headers["Authorization"] = `Bearer ${token}`;
   }
   return headers;
-}
+};
 
 export async function getFlights(): Promise<ExternalFlight[]> {
   const response = await fetch(`${BASE_URL}/scheduled`, {
@@ -34,9 +58,9 @@ export async function getFlights(): Promise<ExternalFlight[]> {
   });
   if (!response.ok) {
     if (response.status == 401 || response.status == 403) {
-      console.error("No autorizado o token expirado")
+      console.error("No autorizado o token expirado");
       removeToken();
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
     throw new Error("Error al obtener los vuelos");
   }
@@ -47,14 +71,40 @@ export async function getPrivateFlights(): Promise<ExternalFlight[]> {
   const response = await fetch(`${BASE_URL}/privates`, {
     headers: getAuthHeaders(),
   });
-  if(!response.ok) {
+  if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
-       console.error("No autorizado o token expirado para vuelos privados.");
-       removeToken();
-       window.location.href = '/login';
-     }
+      console.error("No autorizado o token expirado para vuelos privados.");
+      removeToken();
+      window.location.href = "/login";
+    }
     throw new Error("Error al obtener los vuelos");
   }
   const data: ExternalFlight[] = await response.json();
-  return data.map((flight: ExternalFlight) => ({...flight, isPrivate: true}));
+  return data.map((flight: ExternalFlight) => ({ ...flight, isPrivate: true }));
+}
+
+export async function createPrivateFlight(
+  flightData: CreatePrivateFlightRequest
+): Promise<PrivateFlightDto> {
+  const response = await fetch(`${BASE_URL}/privates`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(flightData),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      console.error("No autorizado o token expirado al crear vuelo privado.");
+      removeToken();
+      window.location.href = "/login";
+    }
+
+    // Intentar obtener el mensaje de error del backend
+    const errorData = await response.json().catch(() => ({}));
+    const errorMessage =
+      errorData.message || `Error ${response.status} al crear el vuelo`;
+    throw new Error(errorMessage);
+  }
+
+  return response.json();
 }

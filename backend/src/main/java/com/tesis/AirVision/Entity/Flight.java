@@ -2,6 +2,7 @@ package com.tesis.AirVision.Entity;
 
 import com.tesis.AirVision.Enums.*;
 import jakarta.persistence.*;
+import lombok.Data;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -10,6 +11,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "flights")
+@Data
 public class Flight {
 
     @Id
@@ -29,8 +31,12 @@ public class Flight {
     private Airline airline;
 
     @ManyToOne
-    @JoinColumn(name = "country_code")
-    private Countries country;
+    @JoinColumn(name = "origin_airport_id")
+    private Airport originAirport;
+
+    @ManyToOne
+    @JoinColumn(name = "destination_airport_id")
+    private Airport destinationAirport;
 
     private Double lat;
     private Double lon;

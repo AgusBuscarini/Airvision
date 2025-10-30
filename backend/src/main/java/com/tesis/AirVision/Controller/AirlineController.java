@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/airlines")
 @RequiredArgsConstructor
@@ -28,6 +30,14 @@ public class AirlineController {
         AirlineResponse response = airlineService.createPrivateAirline(request, authenticatedUser);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/my-private")
+    public ResponseEntity<List<AirlineResponse>> getMyPrivateAirlines(
+            @AuthenticationPrincipal User authenticatedUser) {
+
+        List<AirlineResponse> airlines = airlineService.getMyPrivateAirlines(authenticatedUser);
+        return ResponseEntity.ok(airlines);
     }
 
 }

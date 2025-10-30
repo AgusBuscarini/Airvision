@@ -38,11 +38,13 @@ public class SecurityConfig {
 
                         // Admin-only endpoints
                         .requestMatchers("/api/admin/users/**").hasAuthority("ADMIN")
-                        .requestMatchers("/api/admin/airlines/**").hasAuthority("ADMIN") // Ya existía en tu código
+                        .requestMatchers("/api/admin/airlines/**").hasAuthority("ADMIN")
 
                         // Premium-only endpoints: Private Flights and Airlines
-                        .requestMatchers(HttpMethod.GET, "/api/flights/privates").hasAnyAuthority("ADMIN", "USER_PREMIUM")
-                        .requestMatchers(HttpMethod.POST, "/api/airlines").hasAnyAuthority("ADMIN", "USER_PREMIUM")
+                        .requestMatchers("/api/flights/privates").hasAnyAuthority("ADMIN", "USER_PREMIUM")
+                        .requestMatchers("/api/airlines").hasAnyAuthority("ADMIN", "USER_PREMIUM")
+                        .requestMatchers("/api/airports").hasAnyAuthority("ADMIN", "USER_PREMIUM")
+                        .requestMatchers("/api/countries").hasAnyAuthority("ADMIN", "USER_PREMIUM")
 
                         // All authenticated users can access global flights
                         .requestMatchers(HttpMethod.GET, "/api/flights/realtime", "/api/flights/limit", "/api/flights/scheduled").authenticated()
