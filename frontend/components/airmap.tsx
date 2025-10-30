@@ -17,6 +17,7 @@ import LogoutButton from "./logoutButton";
 import AirlineModal, { AirlineFormData } from "../components/airlineModal";
 import FlightModal, { FlightFormData } from "../components/flightsModal";
 import AirlineManagementModal from "./airlineAdminManagement";
+import { useAuth } from "@/context/authContext";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -164,10 +165,10 @@ export default function AirMap() {
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
 
+  const { role } = useAuth();
+
   const [isAirlineManagementModalOpen, setIsAirlineManagementModalOpen] =
     useState(false);
-
-  const userRole = "ADMIN";
 
   const handleOpenAirlineModal = () => {
     setIsFlightModalOpen(false);
@@ -202,24 +203,17 @@ export default function AirMap() {
     setIsAirlineManagementModalOpen(false);
   };
 
-  const handleAirlineSubmit = async (formData: AirlineFormData) => {
-    console.log("Datos de la aerolinea a enviar:", formData);
-    // AQUÍ VA LA LÓGICA PARA LLAMAR AL SERVICIO QUE CREA EL VUELO EN EL BACKEND
-    handleCloseAirlineModal();
-  };
-
-  const handleFlightSubmit = async (formData: FlightFormData) => {
-    console.log("Datos del vuelo a enviar:", formData);
-    // AQUÍ VA LA LÓGICA PARA LLAMAR AL SERVICIO QUE CREA LA AEROLINEA EN EL BACKEND
-    handleCloseFlightModal();
-  };
-
   useEffect(() => {
     const fetchFlights = async () => {
       try {
+        const publicFlightsPromise = getFlights();
+        const privateFlightsPromise =
+          role === "ADMIN" || role === "USER_PREMIUM"
+            ? getPrivateFlights()
+            : Promise.resolve([]);
         const [publicFlights, privateFlights] = await Promise.all([
-          getFlights(),
-          getPrivateFlights(),
+          publicFlightsPromise,
+          privateFlightsPromise,
         ]);
         setFlights([...publicFlights, ...privateFlights]);
       } catch (error) {
@@ -230,7 +224,7 @@ export default function AirMap() {
     fetchFlights();
     const interval = setInterval(fetchFlights, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [role]);
 
   const filteredFlights = useMemo(() => {
     return flights.filter((flight) => {
@@ -604,7 +598,7 @@ export default function AirMap() {
         )}
       </div>
 
-      {userRole === "ADMIN" && (
+      {role === "ADMIN" && (
         <button
           onClick={handleOpenAirlineManagementModal}
           style={{
@@ -626,46 +620,49 @@ export default function AirMap() {
         </button>
       )}
 
-      <button
-        onClick={handleOpenAirlineModal}
-        style={{
-          position: "absolute",
-          top: "100px",
-          right: "10px",
-          zIndex: 1000,
-          padding: "8px 12px",
-          backgroundColor: "#f59e0b",
-          color: "white",
-          fontWeight: "bold",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-        }}
-      >
-        Crear Aerolinea
-      </button>
+      {(role === "ADMIN" || role === "USER_PREMIUM") && (
+        <>
+          <button
+            onClick={handleOpenAirlineModal}
+            style={{
+              position: "absolute",
+              top: "100px",
+              right: "10px",
+              zIndex: 1000,
+              padding: "8px 12px",
+              backgroundColor: "#f59e0b",
+              color: "white",
+              fontWeight: "bold",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+            }}
+          >
+            Crear Aerolinea
+          </button>
 
-      <button
-        onClick={handleOpenFlightModal}
-        style={{
-          position: "absolute",
-          top: "145px",
-          right: "10px",
-          zIndex: 1000,
-          padding: "8px 12px",
-          backgroundColor: "#f59e0b",
-          color: "white",
-          fontWeight: "bold",
-          border: "none",
-          borderRadius: "6px",
-          cursor: "pointer",
-          boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
-        }}
-      >
-        Crear Vuelo
-      </button>
-
+          <button
+            onClick={handleOpenFlightModal}
+            style={{
+              position: "absolute",
+              top: "145px",
+              right: "10px",
+              zIndex: 1000,
+              padding: "8px 12px",
+              backgroundColor: "#f59e0b",
+              color: "white",
+              fontWeight: "bold",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+            }}
+          >
+            Crear Vuelo
+          </button>
+        </>
+      )}
       <MapContainer
         center={[20, 0]}
         zoom={2}
@@ -686,12 +683,10 @@ export default function AirMap() {
       <AirlineModal
         isOpen={isAirlineModalOpen}
         onClose={handleCloseAirlineModal}
-        onSubmit={handleAirlineSubmit}
       />
       <FlightModal
         isOpen={isFlightModalOpen}
         onClose={handleCloseFlightModal}
-        onSubmit={handleFlightSubmit}
       />
       <AirlineManagementModal
         isOpen={isAirlineManagementModalOpen}

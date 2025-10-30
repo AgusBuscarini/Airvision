@@ -1,14 +1,15 @@
 "use client"
 
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
-import { getToken, saveToken, removeToken, isAuthenticated } from '@/services/userService';
+import { getToken, saveToken, removeToken, isAuthenticated, getRole } from '@/services/userService';
 import { useRouter } from 'next/navigation';
 
 interface AuthContextType {
     isAuth: boolean;
-    login: (token: string) => void;
+    login: (token: string, role: string) => void;
     logout: () => void;
     isLoading: boolean;
+    role: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined> (undefined);
@@ -19,22 +20,26 @@ interface AuthContextProps {
 
 export const AuthProvider: React.FC<AuthContextProps> = ({ children }) => {
     const [isAuth, setIsAuth] = useState<boolean>(false);
+    const [role, setRole] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const router = useRouter();
 
     useEffect(() => {
         setIsAuth(isAuthenticated());
+        setRole(getRole());
         setIsLoading(false);
     }, []);
 
-    const login = useCallback((token: string) => {
-        saveToken(token);
+    const login = useCallback((token: string, role: string) => {
+        saveToken(token, role);
         setIsAuth(true);
+        setRole(role);
     }, []);
 
     const logout = useCallback(() => {
         removeToken();
         setIsAuth(false);
+        setRole(null);
         router.push('/login');
     }, [router]);
 
@@ -54,7 +59,7 @@ export const AuthProvider: React.FC<AuthContextProps> = ({ children }) => {
         return () => window.removeEventListener('storage', handleStorageChange);
     }, [isAuth, router]);
     return (
-        <AuthContext.Provider value={{ isAuth, login, logout, isLoading }}>
+        <AuthContext.Provider value={{ isAuth, login, logout, isLoading, role }}>
         {children}
         </AuthContext.Provider>
     );

@@ -27,11 +27,13 @@ export interface RegisterResponse {
 }
 
 const BASE_URL = "http://localhost:8080/api/auth";
-const TOKEN_KEY = "authToken"
+const TOKEN_KEY = "authToken";
+const ROLE_KEY = "userRole";
 
-export function saveToken (token: string): void {
+export function saveToken (token: string, role: string): void {
   if(typeof window !== "undefined") {
     localStorage.setItem(TOKEN_KEY, token);
+    localStorage.setItem(ROLE_KEY, role);
   }
 }
 
@@ -42,11 +44,21 @@ export function getToken (): string | null {
   return null;
 }
 
+export function getRole (): string | null { // <-- AÑADIR ESTA FUNCIÓN
+  if (typeof window !== "undefined") {
+    return localStorage.getItem(ROLE_KEY);
+  }
+  return null;
+}
+
 export function removeToken(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem(TOKEN_KEY);    
+    localStorage.removeItem(ROLE_KEY);
   }
 }
+
+
 
 export function isAuthenticated (): boolean {
   return getToken() !== null;
@@ -65,8 +77,8 @@ export async function loginUser(credentials: LoginRequest): Promise<LoginRespons
     throw new Error(data.message || "Credenciales inválidas");
   }
 
-  if (data.token) {
-    saveToken(data.token);
+  if (data.token && data.role) {
+    saveToken(data.token, data.role);
   } else {
     console.warn("Login exitoso pero no se recibio token")
   }

@@ -18,8 +18,8 @@ export default function LoginPage() {
 
     try {
       const response = await loginUser({ email, password });
-      if (response.token) {
-        login(response.token);
+      if (response.token && response.role) {
+        login(response.token, response.role);
         router.push("/map")
       } else {
         setError(response.message || "Error inesperado: no se recibio token")

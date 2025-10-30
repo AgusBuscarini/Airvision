@@ -6,7 +6,7 @@ import { createPrivateAirline, Country } from "@/services/airlineService";
 interface AirlineModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: AirlineFormData) => void;
+  onSuccess?: () => void;
 }
 
 export interface AirlineFormData {
@@ -19,7 +19,7 @@ export interface AirlineFormData {
 const AirlineModal: React.FC<AirlineModalProps> = ({
   isOpen,
   onClose,
-  onSubmit,
+  onSuccess,
 }) => {
   const [formData, setFormData] = useState<AirlineFormData>({
     name: "",

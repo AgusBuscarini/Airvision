@@ -65,3 +65,63 @@ export async function getMyPrivateAirlines(): Promise<AirlineResponse[]> {
   }
   return response.json();
 }
+
+export async function getAllAirlines(): Promise<AirlineResponse[]> {
+  const token = getToken();
+  if (!token) throw new Error("Administrador no autenticado");
+
+  const response = await fetch("http://localhost:8080/api/admin/airlines", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al obtener todas las aerolíneas");
+  }
+  return response.json();
+}
+
+export async function updateAirline(
+  id: string,
+  airlineData: AirlineRequest
+): Promise<AirlineResponse> {
+  const token = getToken();
+  if (!token) throw new Error("Administrador no autenticado");
+
+  const response = await fetch(`http://localhost:8080/api/admin/airlines/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(airlineData),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || "Error al actualizar la aerolínea");
+  }
+  return response.json();
+}
+
+export async function deleteAirline(id: string): Promise<void> {
+  const token = getToken();
+  if (!token) throw new Error("Administrador no autenticado");
+
+  const response = await fetch(`http://localhost:8080/api/admin/airlines/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status !== 204) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Error al eliminar la aerolínea");
+    }
+  }
+}
