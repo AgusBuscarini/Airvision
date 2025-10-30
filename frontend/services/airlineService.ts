@@ -24,7 +24,9 @@ export interface AirlineResponse {
   type: string;
 }
 
-export async function createPrivateAirline(request: AirlineRequest): Promise<AirlineResponse> {
+export async function createPrivateAirline(
+  request: AirlineRequest
+): Promise<AirlineResponse> {
   const token = getToken();
 
   const response = await fetch(`${BASE_URL}/airlines`, {
@@ -41,5 +43,25 @@ export async function createPrivateAirline(request: AirlineRequest): Promise<Air
     throw new Error(errorText || "Error al crear la aerolínea");
   }
 
+  return response.json();
+}
+
+export async function getMyPrivateAirlines(): Promise<AirlineResponse[]> {
+  const token = getToken();
+  if (!token) {
+    throw new Error("Usuario no autenticado");
+  }
+
+  const response = await fetch(`${BASE_URL}/airlines/my-private`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al obtener mis aerolíneas privadas");
+  }
   return response.json();
 }

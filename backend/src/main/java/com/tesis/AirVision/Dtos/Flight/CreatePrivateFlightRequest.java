@@ -7,19 +7,9 @@ import java.util.UUID;
 
 @Data
 public class CreatePrivateFlightRequest {
-
-    @NotBlank(message = "El indicativo del vuelo (callsign) es obligatorio")
     private String callsign;
-
-    @NotNull(message = "La aerolínea es obligatoria")
     private UUID airlineId;
-
+    private UUID originAirportId;
+    private UUID destinationAirportId;
     private String icao24;
-    private Double lat;
-    private Double lon;
-    private Double baroAltitude;
-    private Double velocity;
-    private Double trueTrack;
-    private Double verticalRate;
-    private Boolean onGround;
 }

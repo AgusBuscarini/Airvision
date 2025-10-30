@@ -5,7 +5,6 @@ import com.tesis.AirVision.Service.FlightScheduledService;
 import com.tesis.AirVision.Service.OpenSkyService;
 import com.tesis.AirVision.Service.FlightManagementService;
 import com.tesis.AirVision.Dtos.Flight.*;
-import com.tesis.AirVision.Service.PrivateFlightService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,7 +21,6 @@ import java.util.List;
 public class FlightController {
     private final OpenSkyService openSkyService;
     private final FlightScheduledService flightScheduledService;
-    private final PrivateFlightService privateFlightService;
     private final FlightManagementService flightManagementService;
 
     @GetMapping("/realtime")
@@ -44,12 +42,12 @@ public class FlightController {
     }
 
     @GetMapping("/privates")
-    public ResponseEntity<List<PrivateFlightDto>> getPrivateFlights() {
-        List<PrivateFlightDto> flights = privateFlightService.getPrivateFlights();
+    public ResponseEntity<List<PrivateFlightDto>> getPrivateFlights(@AuthenticationPrincipal User user) {
+        List<PrivateFlightDto> flights = flightManagementService.getPrivateFlights(user);
         return ResponseEntity.ok(flights);
     }
 
-    @PostMapping
+    @PostMapping("/privates")
     public ResponseEntity<PrivateFlightDto> createPrivateFlight(
             @Valid @RequestBody CreatePrivateFlightRequest request,
             @AuthenticationPrincipal User authenticatedUser) {

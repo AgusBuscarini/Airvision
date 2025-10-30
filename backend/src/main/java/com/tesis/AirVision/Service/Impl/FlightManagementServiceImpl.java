@@ -3,10 +3,13 @@ package com.tesis.AirVision.Service.Impl;
 import com.tesis.AirVision.Dtos.Flight.CreatePrivateFlightRequest;
 import com.tesis.AirVision.Dtos.Flight.PrivateFlightDto;
 import com.tesis.AirVision.Entity.Airline;
+import com.tesis.AirVision.Entity.Airport;
 import com.tesis.AirVision.Entity.Flight;
 import com.tesis.AirVision.Entity.User;
+import com.tesis.AirVision.Enums.Role;
 import com.tesis.AirVision.Enums.Source;
 import com.tesis.AirVision.Repository.AirlineRepository;
+import com.tesis.AirVision.Repository.AirportRepository;
 import com.tesis.AirVision.Repository.FlightRepository;
 import com.tesis.AirVision.Service.FlightManagementService;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -24,46 +28,64 @@ public class FlightManagementServiceImpl implements FlightManagementService {
 
     private final FlightRepository flightRepository;
     private final AirlineRepository airlineRepository;
+    private final AirportRepository airportRepository;
 
     @Override
     public PrivateFlightDto createPrivateFlight(CreatePrivateFlightRequest request, User ownerUser) {
 
-        Optional<Airline> optionalAirline = airlineRepository.findById(request.getAirlineId());
+        // --- Validación de Aerolínea (como antes) ---
+        Airline airline = airlineRepository.findById(request.getAirlineId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aerolínea no encontrada."));
 
-        if (optionalAirline.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aerolínea no encontrada.");
-        }
-
-        Airline airline = optionalAirline.get();
-
-        if (airline.getOwnerUser() == null || !airline.getOwnerUser().getId().equals(ownerUser.getId())) {
+        if (ownerUser.getRole() != Role.ADMIN &&
+                (airline.getOwnerUser() == null || !airline.getOwnerUser().getId().equals(ownerUser.getId()))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para crear vuelos para esta aerolínea.");
         }
 
+        // --- NUEVO: Validar Aeropuertos ---
+        Airport origin = airportRepository.findById(request.getOriginAirportId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aeropuerto de origen no encontrado."));
+
+        Airport destination = airportRepository.findById(request.getDestinationAirportId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aeropuerto de destino no encontrado."));
+
+        if (origin.getId().equals(destination.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El origen y el destino no pueden ser el mismo.");
+        }
+
+        // --- Crear Vuelo ---
         Flight newFlight = new Flight();
         newFlight.setSource(Source.SIMULATED);
         newFlight.setOwnerUser(ownerUser);
         newFlight.setAirline(airline);
         newFlight.setCallsign(request.getCallsign());
 
+        // --- NUEVO: Asignar ruta y posición inicial ---
+        newFlight.setOriginAirport(origin);
+        newFlight.setDestinationAirport(destination);
+        newFlight.setLat(origin.getLat()); // Posición inicial
+        newFlight.setLon(origin.getLon()); // Posición inicial
+        newFlight.setOnGround(true); // Empieza en tierra
+        newFlight.setBaroAltitude(origin.getLat()); // (Podríamos usar una altitud de aeropuerto si la tuviéramos)
+
+        // Valores por defecto
         newFlight.setIcao24(request.getIcao24() != null ? request.getIcao24() : UUID.randomUUID().toString().substring(0, 6));
-        newFlight.setLat(request.getLat() != null ? request.getLat() : -31.4);
-        newFlight.setLon(request.getLon() != null ? request.getLon() : -64.2);
-        newFlight.setBaroAltitude(request.getBaroAltitude() != null ? request.getBaroAltitude() : 10000.0);
-        newFlight.setVelocity(request.getVelocity() != null ? request.getVelocity() : 700.0);
-        newFlight.setTrueTrack(request.getTrueTrack() != null ? request.getTrueTrack() : 90.0);
-        newFlight.setVerticalRate(request.getVerticalRate() != null ? request.getVerticalRate() : 0.0);
-        newFlight.setOnGround(request.getOnGround() != null ? request.getOnGround() : false);
+        newFlight.setVelocity(0.0); // Velocidad inicial 0
+        newFlight.setTrueTrack(0.0); // Rumbo inicial
+        newFlight.setVerticalRate(0.0);
         newFlight.setLastContactTs(OffsetDateTime.now());
         newFlight.setUpdatedAt(OffsetDateTime.now());
 
         Flight savedFlight = flightRepository.save(newFlight);
 
+        savedFlight.setOnGround(false);
+        flightRepository.save(savedFlight);
+
         return PrivateFlightDto.builder()
                 .icao24(savedFlight.getId())
                 .callsign(savedFlight.getCallsign())
-                .originCountry("Mock Origin") // Temporal
-                .destination("Mock Destination") // Temporal
+                .originCountry(savedFlight.getOriginAirport().getName())
+                .destination(savedFlight.getDestinationAirport().getName())
                 .aircraftModel("Mock Aircraft") // Temporal
                 .lat(savedFlight.getLat())
                 .lon(savedFlight.getLon())
@@ -74,5 +96,27 @@ public class FlightManagementServiceImpl implements FlightManagementService {
                 .onGround(savedFlight.getOnGround())
                 .lastContactTs(savedFlight.getLastContactTs())
                 .build();
+    }
+
+    @Override
+    public List<PrivateFlightDto> getPrivateFlights(User ownerUser) {
+        List<Flight> flights = flightRepository.findByOwnerUserAndSource(ownerUser, Source.SIMULATED);
+
+        return flights.stream()
+                .map(flight -> PrivateFlightDto.builder()
+                        .icao24(flight.getId())
+                        .callsign(flight.getCallsign())
+                        .originCountry(flight.getOriginAirport().getName())
+                        .destination(flight.getDestinationAirport().getName())
+                        .lat(flight.getLat())
+                        .lon(flight.getLon())
+                        .baroAltitude(flight.getBaroAltitude())
+                        .velocity(flight.getVelocity())
+                        .trueTrack(flight.getTrueTrack())
+                        .verticalRate(flight.getVerticalRate())
+                        .onGround(flight.getOnGround())
+                        .lastContactTs(flight.getLastContactTs())
+                        .build())
+                .toList();
     }
 }
