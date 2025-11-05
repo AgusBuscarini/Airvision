@@ -9,11 +9,22 @@ export interface LoginResponse {
   token: string | null;
 }
 
+export enum Role {
+  ADMIN = "ADMIN",
+  USER_FREE = "USER_FREE",
+  USER_PREMIUM = "USER_PREMIUM",
+}
+
 export interface User {
-  id?: number;
+  id: string;
   name: string;
   email: string;
-  role?: string;
+  role: Role;
+  createdAt: string;
+}
+
+export interface UpdateUserRoleRequest {
+  role: Role;
 }
 
 export interface RegisterRequest {
@@ -27,8 +38,20 @@ export interface RegisterResponse {
 }
 
 const BASE_URL = "http://localhost:8080/api/auth";
+const BASE_ADMIN_URL = "http://localhost:8080/api/admin"
 const TOKEN_KEY = "authToken";
 const ROLE_KEY = "userRole";
+
+const getAuthHeaders = (): HeadersInit => {
+  const token = getToken();
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+};
 
 export function saveToken (token: string, role: string): void {
   if(typeof window !== "undefined") {
@@ -57,8 +80,6 @@ export function removeToken(): void {
     localStorage.removeItem(ROLE_KEY);
   }
 }
-
-
 
 export function isAuthenticated (): boolean {
   return getToken() !== null;
@@ -102,4 +123,41 @@ export async function registerUser(
   }
 
   return data;
+}
+
+export async function getAllUsers(): Promise<User[]> {
+  const response = await fetch(`${BASE_ADMIN_URL}/users`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      removeToken();
+      window.location.href = "/login";
+    }
+    throw new Error("Error al obtener los usuarios (solo Admin)");
+  }
+  return response.json();
+}
+
+export async function updateUserRole(
+  userId: string,
+  request: UpdateUserRoleRequest
+): Promise<User> {
+  const response = await fetch(`${BASE_ADMIN_URL}/users/${userId}/role`, {
+    method: "PUT",
+    headers: getAuthHeaders(),
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+     if (response.status === 401 || response.status === 403) {
+      removeToken();
+      window.location.href = "/login";
+    }
+    const errorText = await response.text();
+    throw new Error(errorText || "Error al actualizar el rol del usuario");
+  }
+  return response.json();
 }
