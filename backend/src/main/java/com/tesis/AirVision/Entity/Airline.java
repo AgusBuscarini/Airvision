@@ -2,6 +2,7 @@ package com.tesis.AirVision.Entity;
 
 import com.tesis.AirVision.Enums.*;
 import jakarta.persistence.*;
+import lombok.Data;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -9,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
+@Data
 @Table(name = "airlines")
 public class Airline {
 
@@ -29,7 +31,10 @@ public class Airline {
 
     private String iata;
     private String icao;
-    private String countryCode;
+
+    @ManyToOne
+    @JoinColumn(name = "country_code")
+    private Countries country;
 
     private Boolean active = true;
 

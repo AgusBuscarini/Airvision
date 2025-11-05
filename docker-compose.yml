@@ -1,10 +1,7 @@
-version: '3.9'
-
 services:
   db:
     image: postgres:16
     container_name: airvision-db
-    restart: always
     environment:
       POSTGRES_USER: airvision
       POSTGRES_PASSWORD: airvision
@@ -24,12 +21,13 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: airvision-backend
-    restart: always
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "8080:8080"
+    env_file:
+      - ./backend/.env
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/airvision
       SPRING_DATASOURCE_USERNAME: airvision

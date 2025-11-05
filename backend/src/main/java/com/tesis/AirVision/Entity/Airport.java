@@ -1,11 +1,14 @@
 package com.tesis.AirVision.Entity;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "airports")
+@Data
 public class Airport {
 
     @Id
@@ -17,7 +20,10 @@ public class Airport {
 
     private String iata;
     private String icao;
-    private String countryCode;
+
+    @ManyToOne
+    @JoinColumn(name = "country_code")
+    private Countries country;
 
     private Double lat;
     private Double lon;
