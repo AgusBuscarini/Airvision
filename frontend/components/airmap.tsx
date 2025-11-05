@@ -8,16 +8,12 @@ import L from "leaflet";
 import { LatLngBoundsExpression } from "leaflet";
 import "leaflet.markercluster";
 import { useEffect, useState, useMemo } from "react";
-import {
-  getFlights,
-  getPrivateFlights,
-  ExternalFlight,
-} from "../services/flightService";
+import { getFlights, getPrivateFlights, ExternalFlight } from "../services/flightService";
 import LogoutButton from "./logoutButton";
-import AirlineModal, { AirlineFormData } from "../components/airlineModal";
-import FlightModal, { FlightFormData } from "../components/flightsModal";
 import AirlineManagementModal from "./airlineAdminManagement";
 import { useAuth } from "@/context/authContext";
+import MyAirlinesModal from "./myAirlinesModal";
+import MyFlightsModal from "./myFlightsModal";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -158,8 +154,8 @@ const initialFilters: Filters = {
 
 export default function AirMap() {
   const [flights, setFlights] = useState<ExternalFlight[]>([]);
-  const [isFlightModalOpen, setIsFlightModalOpen] = useState(false);
-  const [isAirlineModalOpen, setIsAirlineModalOpen] = useState(false);
+  const [isMyFlightsModalOpen, setIsMyFlightsModalOpen] = useState(false);
+  const [isMyAirlinesModalOpen, setIsMyAirlinesModalOpen] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<Filters>(initialFilters);
@@ -170,31 +166,9 @@ export default function AirMap() {
   const [isAirlineManagementModalOpen, setIsAirlineManagementModalOpen] =
     useState(false);
 
-  const handleOpenAirlineModal = () => {
-    setIsFlightModalOpen(false);
-    setIsFilterMenuOpen(false);
-    setIsAirlineManagementModalOpen(false);
-    setIsAirlineModalOpen(true);
-  };
-
-  const handleCloseAirlineModal = () => {
-    setIsAirlineModalOpen(false);
-  };
-
-  const handleOpenFlightModal = () => {
-    setIsAirlineModalOpen(false);
-    setIsFilterMenuOpen(false);
-    setIsAirlineManagementModalOpen(false);
-    setIsFlightModalOpen(true);
-  };
-
-  const handleCloseFlightModal = () => {
-    setIsFlightModalOpen(false);
-  };
-
   const handleOpenAirlineManagementModal = () => {
-    setIsFlightModalOpen(false);
-    setIsAirlineModalOpen(false);
+    setIsMyFlightsModalOpen(false);
+    setIsMyAirlinesModalOpen(false);
     setIsFilterMenuOpen(false);
     setIsAirlineManagementModalOpen(true);
   };
@@ -228,7 +202,6 @@ export default function AirMap() {
 
   const filteredFlights = useMemo(() => {
     return flights.filter((flight) => {
-      // Filtro por búsqueda (callsign u originCountry)
       const searchTermLower = searchTerm.toLowerCase();
       const matchesSearch =
         searchTermLower === "" ||
@@ -239,36 +212,30 @@ export default function AirMap() {
 
       if (!matchesSearch) return false;
 
-      // Filtro por tipo de vuelo
       if (filters.flightType === "public" && flight.isPrivate) return false;
       if (filters.flightType === "private" && !flight.isPrivate) return false;
 
-      // Filtro por estado en tierra
       if (filters.onGround !== null && flight.onGround !== filters.onGround)
         return false;
 
-      // Filtro por altitud mínima
       if (
         filters.minAltitude !== null &&
         (flight.baroAltitude ?? -Infinity) < filters.minAltitude
       )
         return false;
 
-      // Filtro por altitud máxima
       if (
         filters.maxAltitude !== null &&
         (flight.baroAltitude ?? Infinity) > filters.maxAltitude
       )
         return false;
 
-      // Filtro por velocidad mínima
       if (
         filters.minSpeed !== null &&
         (flight.velocity ?? -Infinity) < filters.minSpeed
       )
         return false;
 
-      // Filtro por velocidad máxima
       if (
         filters.maxSpeed !== null &&
         (flight.velocity ?? Infinity) > filters.maxSpeed
@@ -323,7 +290,6 @@ export default function AirMap() {
           boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
         }}
       >
-        {/* Barra de Búsqueda */}
         <input
           type="text"
           placeholder="Buscar por Callsign o País..."
@@ -338,7 +304,6 @@ export default function AirMap() {
           }}
         />
 
-        {/* Botón de Filtros */}
         <button
           onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
           style={{
@@ -357,7 +322,6 @@ export default function AirMap() {
           <FilterIcon />
         </button>
 
-        {/* Menú Desplegable de Filtros */}
         {isFilterMenuOpen && (
           <div
             style={{
@@ -387,7 +351,6 @@ export default function AirMap() {
               Filtros
             </h3>
 
-            {/* Tipo de Vuelo */}
             <div>
               <label
                 style={{
@@ -415,7 +378,6 @@ export default function AirMap() {
               </select>
             </div>
 
-            {/* Estado */}
             <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
               <label style={{ fontSize: "14px" }}>Estado:</label>
               <label style={{ fontSize: "14px", cursor: "pointer" }}>
@@ -456,7 +418,6 @@ export default function AirMap() {
               </label>
             </div>
 
-            {/* Altitud */}
             <div
               style={{
                 display: "grid",
@@ -518,7 +479,6 @@ export default function AirMap() {
               </div>
             </div>
 
-            {/* Velocidad */}
             <div
               style={{
                 display: "grid",
@@ -580,7 +540,6 @@ export default function AirMap() {
               </div>
             </div>
 
-            {/* Botón Resetear Filtros */}
             <button
               onClick={resetFilters}
               style={{
@@ -623,7 +582,7 @@ export default function AirMap() {
       {(role === "ADMIN" || role === "USER_PREMIUM") && (
         <>
           <button
-            onClick={handleOpenAirlineModal}
+            onClick={() => setIsMyAirlinesModalOpen(true)}
             style={{
               position: "absolute",
               top: "100px",
@@ -639,11 +598,11 @@ export default function AirMap() {
               boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
             }}
           >
-            Crear Aerolinea
+            Mis Aerolineas
           </button>
 
           <button
-            onClick={handleOpenFlightModal}
+            onClick={() => setIsMyFlightsModalOpen(true)}
             style={{
               position: "absolute",
               top: "145px",
@@ -659,7 +618,7 @@ export default function AirMap() {
               boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
             }}
           >
-            Crear Vuelo
+            Mis Vuelos
           </button>
         </>
       )}
@@ -680,14 +639,15 @@ export default function AirMap() {
         <FlightClusters flights={filteredFlights} />
       </MapContainer>
 
-      <AirlineModal
-        isOpen={isAirlineModalOpen}
-        onClose={handleCloseAirlineModal}
+      <MyAirlinesModal
+        isOpen={isMyAirlinesModalOpen}
+        onClose={() => setIsMyAirlinesModalOpen(false)}
       />
-      <FlightModal
-        isOpen={isFlightModalOpen}
-        onClose={handleCloseFlightModal}
+      <MyFlightsModal
+        isOpen={isMyFlightsModalOpen}
+        onClose={() => setIsMyFlightsModalOpen(false)}
       />
+
       <AirlineManagementModal
         isOpen={isAirlineManagementModalOpen}
         onClose={handleCloseAirlineManagementModal}

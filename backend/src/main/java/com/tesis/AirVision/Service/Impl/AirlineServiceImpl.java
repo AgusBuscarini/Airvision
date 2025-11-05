@@ -5,6 +5,7 @@ import com.tesis.AirVision.Dtos.Airline.AirlineResponse;
 import com.tesis.AirVision.Entity.Airline;
 import com.tesis.AirVision.Entity.Flight;
 import com.tesis.AirVision.Entity.User;
+import com.tesis.AirVision.Enums.Role;
 import com.tesis.AirVision.Enums.Type;
 import com.tesis.AirVision.Repository.AirlineRepository;
 import com.tesis.AirVision.Repository.FlightRepository;
@@ -88,6 +89,20 @@ public class AirlineServiceImpl implements AirlineService {
                 .stream()
                 .map(this::toAirlineResponseDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void deletePrivateAirline(UUID airlineId, User ownerUser) {
+        Airline airline = airlineRepository.findById(airlineId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aerolínea no encontrada"));
+
+        if (ownerUser.getRole() != Role.ADMIN &&
+                (airline.getOwnerUser() == null || !airline.getOwnerUser().getId().equals(ownerUser.getId()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para eliminar esta aerolínea.");
+        }
+
+        this.deleteAirline(airlineId);
     }
 
     private AirlineResponse toAirlineResponseDto(Airline airline) {

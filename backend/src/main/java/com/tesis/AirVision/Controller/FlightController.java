@@ -13,6 +13,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/flights")
@@ -53,5 +54,15 @@ public class FlightController {
             @AuthenticationPrincipal User authenticatedUser) {
         PrivateFlightDto newFlight = flightManagementService.createPrivateFlight(request, authenticatedUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(newFlight);
+    }
+
+    @DeleteMapping("/privates/{id}")
+    public ResponseEntity<Void> deletePrivateFlight(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User authenticatedUser) {
+
+        flightManagementService.deletePrivateFlight(id, authenticatedUser);
+
+        return ResponseEntity.noContent().build();
     }
 }

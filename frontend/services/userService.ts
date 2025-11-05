@@ -44,7 +44,7 @@ export function getToken (): string | null {
   return null;
 }
 
-export function getRole (): string | null { // <-- AÑADIR ESTA FUNCIÓN
+export function getRole (): string | null {
   if (typeof window !== "undefined") {
     return localStorage.getItem(ROLE_KEY);
   }

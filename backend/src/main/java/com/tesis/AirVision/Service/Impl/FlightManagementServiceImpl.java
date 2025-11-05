@@ -115,4 +115,18 @@ public class FlightManagementServiceImpl implements FlightManagementService {
                         .build())
                 .toList();
     }
+
+    @Override
+    @Transactional
+    public void deletePrivateFlight(UUID flightId, User ownerUser) {
+        Flight flight = flightRepository.findById(flightId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vuelo no encontrado"));
+
+        if (ownerUser.getRole() != Role.ADMIN &&
+                (flight.getOwnerUser() == null || !flight.getOwnerUser().getId().equals(ownerUser.getId()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para eliminar este vuelo.");
+        }
+
+        flightRepository.delete(flight);
+    }
 }

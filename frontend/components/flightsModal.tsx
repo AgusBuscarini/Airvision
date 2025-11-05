@@ -14,16 +14,15 @@ interface Airline {
 interface FlightModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: () => void; // Callback para cuando se crea exitosamente
+  onSuccess?: () => void;
 }
 
 export interface FlightFormData {
   callsign: string;
   airlineId: string;
-  originAirportId: string; // <-- CAMBIAR
-  destinationAirportId: string; // <-- CAMBIAR
+  originAirportId: string;
+  destinationAirportId: string;
   icao24?: string;
-  // onGround: boolean; // El backend ahora lo gestiona
 }
 
 const FlightModal: React.FC<FlightModalProps> = ({
@@ -31,12 +30,11 @@ const FlightModal: React.FC<FlightModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  // --- 4. Actualizar estado inicial ---
   const [formData, setFormData] = useState<FlightFormData>({
     callsign: "",
     airlineId: "",
-    originAirportId: "", // <-- CAMBIAR
-    destinationAirportId: "", // <-- CAMBIAR
+    originAirportId: "",
+    destinationAirportId: "",
   });
 
   const [airports, setAirports] = useState<Airport[]>([]);
@@ -46,13 +44,11 @@ const FlightModal: React.FC<FlightModalProps> = ({
   const [errorAirports, setErrorAirports] = useState("");
   const [errorAirlines, setErrorAirlines] = useState("");
 
-  // Estados para el envío del formulario
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     if (isOpen) {
-      // Reset form when modal opens
       setFormData({
         callsign: "",
         airlineId: "",
@@ -65,7 +61,6 @@ const FlightModal: React.FC<FlightModalProps> = ({
         setIsLoadingAirlines(true);
         setErrorAirlines("");
         try {
-          // --- DESCOMENTAR CUANDO TENGAS EL SERVICIO ---
           const airlines = await getMyPrivateAirlines();
           setPrivateAirlines(airlines);
         } catch (error) {
@@ -176,7 +171,6 @@ const FlightModal: React.FC<FlightModalProps> = ({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Selector de Aerolínea */}
           <div>
             <label
               htmlFor="airlineId"
@@ -228,7 +222,6 @@ const FlightModal: React.FC<FlightModalProps> = ({
               )}
           </div>
 
-          {/* Callsign */}
           <div>
             <label
               htmlFor="callsign"
@@ -249,7 +242,6 @@ const FlightModal: React.FC<FlightModalProps> = ({
             />
           </div>
 
-          {/* ICAO24 */}
           <div>
             <label
               htmlFor="icao24"
@@ -269,7 +261,6 @@ const FlightModal: React.FC<FlightModalProps> = ({
             />
           </div>
 
-          {/* Origen y Destino */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="originAirportId" className="block text-sm font-medium text-gray-700 mb-1">
@@ -312,7 +303,6 @@ const FlightModal: React.FC<FlightModalProps> = ({
             </div>
           </div>
 
-          {/* Botones */}
           <div className="flex justify-end space-x-3 pt-3 border-t mt-6">
             <button
               type="button"

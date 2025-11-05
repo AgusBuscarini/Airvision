@@ -66,6 +66,27 @@ export async function getMyPrivateAirlines(): Promise<AirlineResponse[]> {
   return response.json();
 }
 
+export async function deleteMyPrivateAirline(id: string): Promise<void> {
+  const token = getToken();
+  if (!token) throw new Error("Usuario no autenticado");
+
+  const response = await fetch(`${BASE_URL}/airlines/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      window.location.href = "/login";
+    }
+    if (response.status !== 204) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Error al eliminar la aerolínea");
+    }
+  }
+}
+
 export async function getAllAirlines(): Promise<AirlineResponse[]> {
   const token = getToken();
   if (!token) throw new Error("Administrador no autenticado");

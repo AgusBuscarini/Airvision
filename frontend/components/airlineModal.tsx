@@ -1,4 +1,3 @@
-// components/AirlineModal.tsx
 import React, { useState, useEffect } from "react";
 import { getCountries } from "@/services/countryService";
 import { createPrivateAirline, Country } from "@/services/airlineService";
@@ -30,7 +29,6 @@ const AirlineModal: React.FC<AirlineModalProps> = ({
 
   const [countries, setCountries] = useState<Country[]>([]);
 
-  // 🔹 Cargar países cuando el modal se abre
   useEffect(() => {
     if (isOpen) {
       getCountries()
@@ -50,27 +48,24 @@ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      // 1. Buscamos el objeto país completo usando el 'countryCode' del estado
       const selectedCountry = countries.find(
         (c) => c.code === formData.countryCode
       );
 
-      // 2. Validamos que el país se haya encontrado
       if (!selectedCountry) {
         alert("Por favor, seleccione un país válido.");
         return;
       }
 
-      // 3. Enviamos el OBJETO 'selectedCountry' completo al servicio
       await createPrivateAirline({
         name: formData.name,
         iata: formData.iata,
         icao: formData.icao,
-        country: selectedCountry, // <-- ESTA ES LA LÍNEA CORREGIDA
+        country: selectedCountry,
       });
 
       alert("✅ Aerolínea creada exitosamente");
-      onClose(); // Cierra el modal al tener éxito
+      onClose();
     } catch (error: any) {
       console.error("Error al crear la aerolínea:", error);
       alert(error.message || "Error al crear la aerolínea");

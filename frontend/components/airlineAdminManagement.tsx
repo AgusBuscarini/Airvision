@@ -34,14 +34,6 @@ const AirlineManagementModal: React.FC<AirlineManagementModalProps> = ({ isOpen,
     }
   };
 
-  const handleEdit = (airline: AirlineResponse) => {
-    // Aquí abrirías otro modal (un modal de edición)
-    // pasando 'airline' como prop.
-    // Este modal usaría el servicio 'updateAirline'
-    console.log("Editar aerolínea:", airline);
-    alert("Funcionalidad de edición no implementada en este ejemplo.");
-  };
-
   const handleDelete = async (id: string) => {
     if (!window.confirm("¿Estás seguro de que quieres eliminar esta aerolínea? Esta acción no se puede deshacer.")) {
       return;
@@ -95,7 +87,6 @@ const AirlineManagementModal: React.FC<AirlineManagementModalProps> = ({ isOpen,
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                    <button onClick={() => handleEdit(airline)} className="text-indigo-600 hover:text-indigo-900">Editar</button>
                     <button onClick={() => handleDelete(airline.id)} className="text-red-600 hover:text-red-900">Eliminar</button>
                   </td>
                 </tr>

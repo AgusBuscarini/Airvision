@@ -99,7 +99,6 @@ export async function createPrivateFlight(
       window.location.href = "/login";
     }
 
-    // Intentar obtener el mensaje de error del backend
     const errorData = await response.json().catch(() => ({}));
     const errorMessage =
       errorData.message || `Error ${response.status} al crear el vuelo`;
@@ -107,4 +106,26 @@ export async function createPrivateFlight(
   }
 
   return response.json();
+}
+
+export async function deletePrivateFlight(id: string): Promise<void> {
+  const response = await fetch(`${BASE_URL}/privates/${id}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      console.error("No autorizado o token expirado al eliminar vuelo.");
+      removeToken();
+      window.location.href = "/login";
+    }
+
+    if (response.status !== 204) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage =
+        errorData.message || `Error ${response.status} al eliminar el vuelo`;
+      throw new Error(errorMessage);
+    }
+  }
 }

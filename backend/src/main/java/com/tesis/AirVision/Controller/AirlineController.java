@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/airlines")
@@ -40,4 +41,13 @@ public class AirlineController {
         return ResponseEntity.ok(airlines);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMyPrivateAirline(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal User authenticatedUser) {
+
+        airlineService.deletePrivateAirline(id, authenticatedUser);
+
+        return ResponseEntity.noContent().build();
+    }
 }
