@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface FlightRepository extends JpaRepository<Flight, UUID> {
     List<Flight> findByOwnerUserAndSource(User ownerUser, Source source);
     List<Flight> findBySource(Source source);
+    List<Flight> findByAirlineId(UUID airlineId);
 }

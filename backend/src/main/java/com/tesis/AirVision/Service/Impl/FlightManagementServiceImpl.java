@@ -35,7 +35,6 @@ public class FlightManagementServiceImpl implements FlightManagementService {
     @Transactional
     public PrivateFlightDto createPrivateFlight(CreatePrivateFlightRequest request, User ownerUser) {
 
-        // --- Validación de Aerolínea (como antes) ---
         Airline airline = airlineRepository.findById(request.getAirlineId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aerolínea no encontrada."));
 
@@ -44,7 +43,6 @@ public class FlightManagementServiceImpl implements FlightManagementService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permiso para crear vuelos para esta aerolínea.");
         }
 
-        // --- NUEVO: Validar Aeropuertos ---
         Airport origin = airportRepository.findById(request.getOriginAirportId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Aeropuerto de origen no encontrado."));
 
@@ -55,25 +53,22 @@ public class FlightManagementServiceImpl implements FlightManagementService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El origen y el destino no pueden ser el mismo.");
         }
 
-        // --- Crear Vuelo ---
         Flight newFlight = new Flight();
         newFlight.setSource(Source.SIMULATED);
         newFlight.setOwnerUser(ownerUser);
         newFlight.setAirline(airline);
         newFlight.setCallsign(request.getCallsign());
 
-        // --- NUEVO: Asignar ruta y posición inicial ---
         newFlight.setOriginAirport(origin);
         newFlight.setDestinationAirport(destination);
-        newFlight.setLat(origin.getLat()); // Posición inicial
-        newFlight.setLon(origin.getLon()); // Posición inicial
-        newFlight.setOnGround(true); // Empieza en tierra
-        newFlight.setBaroAltitude(origin.getLat()); // (Podríamos usar una altitud de aeropuerto si la tuviéramos)
+        newFlight.setLat(origin.getLat());
+        newFlight.setLon(origin.getLon());
+        newFlight.setOnGround(true);
+        newFlight.setBaroAltitude(origin.getLat());
 
-        // Valores por defecto
         newFlight.setIcao24(request.getIcao24() != null ? request.getIcao24() : UUID.randomUUID().toString().substring(0, 6));
-        newFlight.setVelocity(0.0); // Velocidad inicial 0
-        newFlight.setTrueTrack(0.0); // Rumbo inicial
+        newFlight.setVelocity(0.0);
+        newFlight.setTrueTrack(0.0);
         newFlight.setVerticalRate(0.0);
         newFlight.setLastContactTs(OffsetDateTime.now());
         newFlight.setUpdatedAt(OffsetDateTime.now());
@@ -88,7 +83,6 @@ public class FlightManagementServiceImpl implements FlightManagementService {
                 .callsign(savedFlight.getCallsign())
                 .originCountry(savedFlight.getOriginAirport().getName())
                 .destination(savedFlight.getDestinationAirport().getName())
-                .aircraftModel("Mock Aircraft") // Temporal
                 .lat(savedFlight.getLat())
                 .lon(savedFlight.getLon())
                 .baroAltitude(savedFlight.getBaroAltitude())

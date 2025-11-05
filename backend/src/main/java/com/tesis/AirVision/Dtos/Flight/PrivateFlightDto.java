@@ -25,5 +25,4 @@ public class PrivateFlightDto {
     private Boolean onGround;
     private OffsetDateTime lastContactTs;
     private String destination;
-    private String aircraftModel;
 }

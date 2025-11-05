@@ -26,7 +26,7 @@ public class PrivateFlightSimulatorServiceImpl implements PrivateFlightSimulator
 
     /**
      * Tarea programada que actualiza la posición de todos los vuelos simulados.
-     * Se ejecuta cada 5 segundos.
+     * Se ejecuta cada 30 segundos.
      */
     @Scheduled(fixedRate = 30000)
     @Override
