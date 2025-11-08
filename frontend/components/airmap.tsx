@@ -8,12 +8,19 @@ import L from "leaflet";
 import { LatLngBoundsExpression } from "leaflet";
 import "leaflet.markercluster";
 import { useEffect, useState, useMemo } from "react";
-import { getFlights, getPrivateFlights, ExternalFlight } from "../services/flightService";
+import {
+  getFlights,
+  getPrivateFlights,
+  ExternalFlight,
+} from "../services/flightService";
 import LogoutButton from "./logoutButton";
 import AirlineManagementModal from "./airlineAdminManagement";
 import { useAuth } from "@/context/authContext";
 import MyAirlinesModal from "./myAirlinesModal";
 import MyFlightsModal from "./myFlightsModal";
+import FaqModal from "./faqModal";
+import TermsModal from "./termsModal";
+import HelpIcon from "./helpIcon";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -160,6 +167,10 @@ export default function AirMap() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+
+  const [isHelpMenuOpen, setIsHelpMenuOpen] = useState(false);
+  const [isFaqOpen, setIsFaqOpen] = useState(false);
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
 
   const { role } = useAuth();
 
@@ -622,6 +633,95 @@ export default function AirMap() {
           </button>
         </>
       )}
+
+      <div
+        style={{
+          position: "absolute",
+          bottom: "20px",
+          right: "20px",
+          zIndex: 1000,
+        }}
+      >
+        {/* Menú desplegable */}
+        {isHelpMenuOpen && (
+          <div
+            style={{
+              position: "absolute",
+              bottom: "calc(100% + 10px)", // 10px por encima del botón
+              right: 0,
+              width: "200px",
+              backgroundColor: "white",
+              borderRadius: "8px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              overflow: "hidden",
+            }}
+          >
+            <button
+              onClick={() => {
+                setIsFaqOpen(true);
+                setIsHelpMenuOpen(false);
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "12px 16px",
+                textAlign: "left",
+                color: "#333",
+                fontSize: "14px",
+                border: "none",
+                background: "none",
+                borderBottom: "1px solid #eee",
+                cursor: "pointer",
+              }}
+              className="hover:bg-gray-100"
+            >
+              Preguntas Frecuentes
+            </button>
+            <button
+              onClick={() => {
+                setIsTermsOpen(true);
+                setIsHelpMenuOpen(false);
+              }}
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "12px 16px",
+                textAlign: "left",
+                color: "#333",
+                fontSize: "14px",
+                border: "none",
+                background: "none",
+                cursor: "pointer",
+              }}
+              className="hover:bg-gray-100"
+            >
+              Términos de Servicio
+            </button>
+          </div>
+        )}
+
+        <button
+          onClick={() => setIsHelpMenuOpen(!isHelpMenuOpen)}
+          style={{
+            padding: "12px",
+            backgroundColor: "#3b82f6",
+            color: "white",
+            border: "none",
+            borderRadius: "50%",
+            cursor: "pointer",
+            boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "56px",
+            height: "56px",
+          }}
+          title="Ayuda y Soporte"
+        >
+          <HelpIcon />
+        </button>
+      </div>
+
       <MapContainer
         center={[20, 0]}
         zoom={2}
@@ -652,6 +752,9 @@ export default function AirMap() {
         isOpen={isAirlineManagementModalOpen}
         onClose={handleCloseAirlineManagementModal}
       />
+
+      <FaqModal isOpen={isFaqOpen} onClose={() => setIsFaqOpen(false)} />
+      <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
     </div>
   );
 }
