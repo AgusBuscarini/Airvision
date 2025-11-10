@@ -21,6 +21,7 @@ import MyFlightsModal from "./myFlightsModal";
 import FaqModal from "./faqModal";
 import TermsModal from "./termsModal";
 import HelpIcon from "./helpIcon";
+import PremiumModal from "./premiumModal";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -171,6 +172,8 @@ export default function AirMap() {
   const [isHelpMenuOpen, setIsHelpMenuOpen] = useState(false);
   const [isFaqOpen, setIsFaqOpen] = useState(false);
   const [isTermsOpen, setIsTermsOpen] = useState(false);
+
+  const [isPremiumModalOpen ,setIsPremiumModalOpen] = useState(false);
 
   const { role } = useAuth();
 
@@ -568,6 +571,28 @@ export default function AirMap() {
         )}
       </div>
 
+      {role === "USER_FREE" && (
+        <button
+          onClick={() => setIsPremiumModalOpen(true)}
+          style={{
+            position: "absolute",
+            top: "100px",
+            right: "10px",
+            zIndex: 1000,
+            padding: "8px 12px",
+            backgroundColor: "#10b981",
+            color: "white",
+            fontWeight: "bold",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+          }}
+        >
+          Hacerse Premium
+        </button>
+      )}
+
       {role === "ADMIN" && (
         <button
           onClick={handleOpenAirlineManagementModal}
@@ -642,12 +667,11 @@ export default function AirMap() {
           zIndex: 1000,
         }}
       >
-        {/* Menú desplegable */}
         {isHelpMenuOpen && (
           <div
             style={{
               position: "absolute",
-              bottom: "calc(100% + 10px)", // 10px por encima del botón
+              bottom: "calc(100% + 10px)",
               right: 0,
               width: "200px",
               backgroundColor: "white",
@@ -755,6 +779,7 @@ export default function AirMap() {
 
       <FaqModal isOpen={isFaqOpen} onClose={() => setIsFaqOpen(false)} />
       <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+      <PremiumModal isOpen={isPremiumModalOpen} onClose={() => setIsPremiumModalOpen(false)} />
     </div>
   );
 }
