@@ -1,6 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { useAuth } from "@/context/authContext";
+import { createPreference, PaymentRequest } from "@/services/paymentService";
 
 interface PremiumModalProps {
   isOpen: boolean;
@@ -23,6 +25,40 @@ const CheckIcon = () => (
 );
 
 const PremiumModal: React.FC<PremiumModalProps> = ({ isOpen, onClose }) => {
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handlePayment = async () => {
+    if (!user || !user.id || !user.email) {
+      setError("No se pudo obtener la información del usuario. Por favor, inicie sesión de nuevo.");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    const paymentData: PaymentRequest = {
+      title: "AirVision - Suscripción Premium",
+      unitPrice: 100.00,
+      quantity: 1,
+      userId: user.id,
+      payerEmail: user.email,
+    };
+
+    try {
+      const response = await createPreference(paymentData);
+      if (response.initPoint) {
+        window.location.href = response.initPoint;
+      } else {
+        setError("No se pudo iniciar el proceso de pago.");
+      }
+    } catch (err: any) {
+      setError(err.message || "Error desconocido");
+      setIsLoading(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -110,15 +146,15 @@ const PremiumModal: React.FC<PremiumModalProps> = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <div className="mt-6 text-center bg-gray-100 p-4 rounded-lg">
-            <p className="text-sm text-gray-700 font-medium">
-              ¿Cómo me hago Premium?
-            </p>
-            <p className="text-sm text-gray-600">
-              Actualmente, la asignación de roles Premium se gestiona
-              manualmente. Por favor, contacta a un administrador del sistema
-              para solicitar tu ascenso de plan.
-            </p>
+          <div className="mt-6 text-center">
+            <button
+              onClick={handlePayment}
+              disabled={isLoading}
+              className="w-full px-5 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {isLoading ? "Procesando..." : "Pagar $2999.00 ARS con MercadoPago"}
+            </button>
+            {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import { getToken } from "./userService";
 
-const BASE_URL = "http://localhost:8080/api/countries";
+const BASE_URL = "/api/countries";
 
 const getAuthHeaders = (): HeadersInit => {
   const token = getToken();

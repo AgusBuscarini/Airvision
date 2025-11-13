@@ -39,7 +39,7 @@ export interface PrivateFlightDto {
   aircraftModel: string;
 }
 
-const BASE_URL = "http://localhost:8080/api/flights";
+const BASE_URL = "/api/flights";
 
 const getAuthHeaders = (): HeadersInit => {
   const token = getToken();
