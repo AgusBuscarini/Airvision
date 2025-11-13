@@ -1,6 +1,6 @@
 import { getToken } from "./userService";
 
-const BASE_URL = "http://localhost:8080/api/airports";
+const BASE_URL = "/api/airports";
 
 export interface Airport {
   id: string;

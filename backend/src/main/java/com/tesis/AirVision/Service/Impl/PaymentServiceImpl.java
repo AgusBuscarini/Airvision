@@ -13,14 +13,17 @@ import java.util.List;
 @Service
 public class PaymentServiceImpl implements PaymentService {
 
-    @Value("${frontend.success-url:/payment/success}")
+    @Value("${frontend.success-url}")
     private String successUrl;
 
-    @Value("${frontend.failure-url:/payment/failure}")
+    @Value("${frontend.failure-url}")
     private String failureUrl;
 
-    @Value("${frontend.pending-url:/payment/pending}")
+    @Value("${frontend.pending-url}")
     private String pendingUrl;
+
+    @Value("${backend.webhook-url}")
+    private String webhookUrl;
 
     @Override
     public CreatePreferenceResponse createPreference(CreatePreferenceRequest req) {
@@ -44,6 +47,7 @@ public class PaymentServiceImpl implements PaymentService {
                             .build())
                     .autoReturn("approved")
                     .externalReference(req.getUserId())
+                    .notificationUrl(webhookUrl)
                     .build();
 
             PreferenceClient client = new PreferenceClient();

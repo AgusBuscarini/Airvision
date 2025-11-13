@@ -9,7 +9,7 @@ import jakarta.annotation.PostConstruct;
 @Configuration
 public class MercadoPagoConfigBean {
 
-    @Value("${mercadopago.access-token:${MP_ACCESS_TOKEN:}}")
+    @Value("${mercadopago.access-token}")
     private String mpAccessToken;
 
     @PostConstruct
@@ -19,7 +19,6 @@ public class MercadoPagoConfigBean {
             throw new IllegalStateException("MP_ACCESS_TOKEN no configurado");
         }
         com.mercadopago.MercadoPagoConfig.setAccessToken(mpAccessToken);
-        System.out.println("✅ MercadoPagoConfig inicializado correctamente con token: " + mpAccessToken.substring(0, 10) + "...");
     }
 
 }
