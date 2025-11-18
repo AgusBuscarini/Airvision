@@ -22,6 +22,7 @@ import FaqModal from "./faqModal";
 import TermsModal from "./termsModal";
 import HelpIcon from "./helpIcon";
 import PremiumModal from "./premiumModal";
+import DashboardStats from "./dashboardStats";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -798,6 +799,11 @@ export default function AirMap() {
             Hacerse Premium
           </button>
         )}
+
+        <DashboardStats 
+          isPremium={isPremium} 
+          onOpenPremium={() => setIsPremiumModalOpen(true)}
+        />
 
         <div style={{ position: "relative" }}>
           {isHelpMenuOpen && (
