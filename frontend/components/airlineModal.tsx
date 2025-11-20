@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { getCountries } from "@/services/countryService";
-import { createPrivateAirline, Country } from "@/services/airlineService";
+import {
+  createPrivateAirline,
+  updateAirline,
+  Country,
+  AirlineResponse,
+} from "@/services/airlineService";
 
 interface AirlineModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  airlineToEdit?: AirlineResponse | null;
 }
 
 export interface AirlineFormData {
@@ -19,6 +25,7 @@ const AirlineModal: React.FC<AirlineModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  airlineToEdit,
 }) => {
   const [formData, setFormData] = useState<AirlineFormData>({
     name: "",
@@ -34,8 +41,24 @@ const AirlineModal: React.FC<AirlineModalProps> = ({
       getCountries()
         .then((data) => setCountries(data))
         .catch((err) => console.error("Error al cargar países:", err));
+
+      if (airlineToEdit) {
+        setFormData({
+          name: airlineToEdit.name,
+          iata: airlineToEdit.iata || "",
+          icao: airlineToEdit.icao || "",
+          countryCode: airlineToEdit.country?.code || "",
+        });
+      } else {
+        setFormData({
+          name: "",
+          iata: "",
+          icao: "",
+          countryCode: "",
+        });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, airlineToEdit]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -44,7 +67,7 @@ const AirlineModal: React.FC<AirlineModalProps> = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
@@ -57,14 +80,23 @@ const handleSubmit = async (e: React.FormEvent) => {
         return;
       }
 
-      await createPrivateAirline({
+      const airlineData = {
         name: formData.name,
         iata: formData.iata,
         icao: formData.icao,
         country: selectedCountry,
-      });
+        active: airlineToEdit ? airlineToEdit.active : true
+      };
 
-      alert("✅ Aerolínea creada exitosamente");
+      if (airlineToEdit) {
+        await updateAirline(airlineToEdit.id, airlineData);
+        alert("✅ Aerolínea actualizada exitosamente");
+      } else {
+        await createPrivateAirline(airlineData);
+        alert("✅ Aerolínea creada exitosamente");
+      }
+
+      if (onSuccess) onSuccess();
       onClose();
     } catch (error: any) {
       console.error("Error al crear la aerolínea:", error);
@@ -182,7 +214,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              Guardar Aerolínea
+              {airlineToEdit ? "Guardar Cambios" : "Guardar Aerolínea"}
             </button>
           </div>
         </form>

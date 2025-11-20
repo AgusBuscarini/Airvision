@@ -10,6 +10,7 @@ import {
   User,
   Role,
 } from '@/services/userService';
+import AirlineModal from './airlineModal';
 
 
 interface AirlineManagementModalProps {
@@ -31,25 +32,40 @@ const AirlineManagementModal: React.FC<AirlineManagementModalProps> = ({ isOpen,
   const [errorUsers, setErrorUsers] = useState('');
   const [isUpdatingRole, setIsUpdatingRole] = useState<string | null>(null);
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [airlineToEdit, setAirlineToEdit] = useState<AirlineResponse | null>(null);
+
+  const handleEdit = (airline: AirlineResponse) => {
+    setAirlineToEdit(airline);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    setIsEditModalOpen(false);
+    setAirlineToEdit(null);
+    fetchAirlines();
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setAirlineToEdit(null);
+  }
+
   useEffect(() => {
     if (isOpen) {
-      setActiveTab('airlines');
-      setAirlines([]);
-      setUsers([]);
       setErrorAirlines('');
       setErrorUsers('');
+      
       fetchAirlines();
+      fetchUsers(); 
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    if (isOpen && activeTab === 'airlines') {
-      fetchAirlines();
-    }
-    if (isOpen && activeTab === 'users') {
-      fetchUsers();
-    }
-  }, [activeTab, isOpen]);
+  const getOwnerName = (ownerId?: string) => {
+    if (!ownerId) return "Sistema (Global)";
+    const user = users.find(u => u.id === ownerId);
+    return user ? user.name : "Usuario desconocido";
+  };
 
   const fetchAirlines = async () => {
     setIsLoadingAirlines(true);
@@ -120,6 +136,7 @@ const renderAirlinesTab = () => (
           <thead className="bg-gray-50">
             <tr>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Propietario</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">País</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IATA/ICAO</th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
@@ -132,6 +149,14 @@ const renderAirlinesTab = () => (
             {airlines.map((airline) => (
               <tr key={airline.id}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{airline.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  {getOwnerName(airline.ownerId)}
+                  {airline.ownerId && (
+                    <span className="block text-xs text-gray-400">
+                       {users.find(u => u.id === airline.ownerId)?.email}
+                    </span>
+                  )}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{airline.country?.name || 'N/A'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{airline.iata || 'N/A'} / {airline.icao || 'N/A'}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -142,6 +167,7 @@ const renderAirlinesTab = () => (
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                  <button onClick={() => handleEdit(airline)} className="text-indigo-600 hover:text-indigo-900 mr-3">Editar</button>
                   <button onClick={() => handleDelete(airline.id)} className="text-red-600 hover:text-red-900">Eliminar</button>
                 </td>
               </tr>
@@ -152,6 +178,13 @@ const renderAirlinesTab = () => (
            <p className="text-center text-gray-500 py-8">No se encontraron aerolíneas privadas.</p>
         )}
       </div>
+      
+      <AirlineModal
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        onSuccess={handleEditSuccess}
+        airlineToEdit={airlineToEdit}
+      />
     </>
   );
 
