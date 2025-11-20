@@ -77,8 +77,10 @@ const FaqModal: React.FC<FaqModalProps> = ({ isOpen, onClose }) => {
             <p>
               La visualización y creación de vuelos privados y aerolíneas
               privadas es una función exclusiva para usuarios{" "}
-              <strong>USER_PREMIUM</strong> y <strong>ADMIN</strong>. Puedes
-              solicitar una actualización de tu rol a un administrador.
+              <strong>PREMIUM</strong>.
+              Puedes obtener tu membresía Premium al instante haciendo clic en el botón{" "}
+              <span className="text-green-600 font-bold">Hacerse Premium</span> en el mapa 
+              y completando el pago seguro con Mercado Pago.
             </p>
           </AccordionItem>
 

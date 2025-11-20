@@ -64,7 +64,7 @@ public class FlightManagementServiceImpl implements FlightManagementService {
         newFlight.setLat(origin.getLat());
         newFlight.setLon(origin.getLon());
         newFlight.setOnGround(true);
-        newFlight.setBaroAltitude(origin.getLat());
+        newFlight.setBaroAltitude(0.0);
 
         newFlight.setIcao24(request.getIcao24() != null ? request.getIcao24() : UUID.randomUUID().toString().substring(0, 6));
         newFlight.setVelocity(0.0);
@@ -74,9 +74,6 @@ public class FlightManagementServiceImpl implements FlightManagementService {
         newFlight.setUpdatedAt(OffsetDateTime.now());
 
         Flight savedFlight = flightRepository.save(newFlight);
-
-        savedFlight.setOnGround(false);
-        flightRepository.save(savedFlight);
 
         return PrivateFlightDto.builder()
                 .icao24(savedFlight.getId())

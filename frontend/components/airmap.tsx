@@ -200,7 +200,7 @@ export default function AirMap() {
     useState(false);
 
   const [hoveredPremium, setHoveredPremium] = useState<
-    "airlines" | "flights" | null
+    "airlines" | "flights" | "filters" | null
   >(null);
 
   const handleOpenAirlineManagementModal = () => {
@@ -353,23 +353,78 @@ export default function AirMap() {
           }}
         />
 
-        <button
-          onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
-          style={{
-            padding: "8px",
-            background: "#f0f0f0",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#333",
-          }}
-          title="Abrir filtros"
-        >
-          <FilterIcon />
-        </button>
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => {
+              if (isPremium) {
+                setIsFilterMenuOpen(!isFilterMenuOpen);
+              } else {
+                setIsPremiumModalOpen(true);
+              }
+            }}
+            onMouseEnter={() => !isPremium && setHoveredPremium("filters")}
+            onMouseLeave={() => setHoveredPremium(null)}
+            style={{
+              padding: "8px",
+              background: "#f0f0f0",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: isPremium ? "#333" : "#9ca3af",
+              opacity: isPremium ? 1 : 0.8,
+            }}
+            title={isPremium ? "Abrir filtros" : "Función Premium"}
+          >
+            <FilterIcon />
+          </button>
+
+          {!isPremium && (
+            <div
+              style={{
+                position: "absolute",
+                top: "-6px",
+                right: "-6px",
+                zIndex: 1001,
+                backgroundColor: "#6b7280",
+                borderRadius: "50%",
+                padding: "2px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.5)",
+                pointerEvents: "none",
+                transform: "scale(0.8)",
+              }}
+            >
+              <LockIcon />
+            </div>
+          )}
+        </div>
+
+        {hoveredPremium === "filters" && (
+          <div
+            style={{
+              position: "absolute",
+              top: "45px",
+              left: "280px",
+              zIndex: 1010,
+              background: "white",
+              color: "#333",
+              padding: "6px 10px",
+              borderRadius: "6px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+              fontSize: "12px",
+              fontWeight: "bold",
+              pointerEvents: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
+            ⭐ Función Premium
+          </div>
+        )}
 
         {isFilterMenuOpen && (
           <div
@@ -662,7 +717,7 @@ export default function AirMap() {
             style={{
               position: "absolute",
               top: "104px",
-              right: "135px",
+              right: "155px",
               zIndex: 1010,
               background: "white",
               color: "#333",
@@ -733,7 +788,7 @@ export default function AirMap() {
           style={{
             position: "absolute",
             top: "149px",
-            right: "135px",
+            right: "125px",
             zIndex: 1010,
             background: "white",
             color: "#333",
@@ -800,8 +855,8 @@ export default function AirMap() {
           </button>
         )}
 
-        <DashboardStats 
-          isPremium={isPremium} 
+        <DashboardStats
+          isPremium={isPremium}
           onOpenPremium={() => setIsPremiumModalOpen(true)}
         />
 

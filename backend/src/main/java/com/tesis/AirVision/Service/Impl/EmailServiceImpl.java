@@ -25,9 +25,9 @@ public class EmailServiceImpl implements EmailService {
             helper.setSubject(subject);
             helper.setText(htmlBody, true); // true = HTML
             mailSender.send(message);
-            log.info("📧 Email enviado correctamente a {}", to);
+            log.info("Email enviado correctamente a {}", to);
         } catch (Exception e) {
-            log.error("❌ Error al enviar email a {}: {}", to, e.getMessage());
+            log.error("Error al enviar email a {}: {}", to, e.getMessage());
         }
     }
 }
