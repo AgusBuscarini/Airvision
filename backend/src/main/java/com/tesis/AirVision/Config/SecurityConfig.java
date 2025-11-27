@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/airlines").hasAnyAuthority("ADMIN", "USER_PREMIUM")
                         .requestMatchers("/api/airports").hasAnyAuthority("ADMIN", "USER_PREMIUM")
                         .requestMatchers("/api/countries").hasAnyAuthority("ADMIN", "USER_PREMIUM")
+                        .requestMatchers("/api/statistics/**").hasAnyAuthority("ADMIN", "USER_PREMIUM")
 
                         // All authenticated users can access global flights
                         .requestMatchers(HttpMethod.GET, "/api/flights/realtime", "/api/flights/limit", "/api/flights/scheduled").authenticated()
