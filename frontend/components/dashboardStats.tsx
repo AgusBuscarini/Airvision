@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import {
   getDashboardStats,
+  getFullExportStats,
   DashboardStatsResponse,
   FlightStats,
 } from "@/services/statsService";
@@ -32,7 +33,7 @@ const SkeletonLoader = () => (
   </div>
 );
 
-type TabType = "global" | "public" | "private";
+type TabType = "global" | "public" | "private" | "mine";
 
 const DashboardStats: React.FC<DashboardStatsProps> = ({
   isPremium,
@@ -76,7 +77,9 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
       ? fullData.global
       : activeTab === "public"
       ? fullData.publicFlights
-      : fullData.privateFlights
+      : activeTab === "private"
+      ? fullData.privateFlights
+      : fullData.myFlights
     : null;
 
   const getTabLabel = (type: TabType) => {
@@ -87,6 +90,73 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
         return "Públicos";
       case "private":
         return "Privados";
+      case "mine":
+        return "Mis Vuelos"
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    setIsLoading(true);
+
+    try {
+      const fullExportData = await getFullExportStats();
+
+      const statsToExport =
+        activeTab === "global"
+          ? fullExportData.global
+          : activeTab === "public"
+          ? fullExportData.publicFlights
+          : activeTab === "private"
+          ? fullExportData.privateFlights
+          : fullExportData.myFlights;
+
+      if (!statsToExport) return;
+
+      const csvRows = [];
+      const date = new Date().toLocaleDateString();
+      const time = new Date().toLocaleTimeString();
+
+      csvRows.push(
+        `Reporte de Estadísticas Completo - ${getTabLabel(activeTab)}`
+      );
+      csvRows.push(`Generado el: ${date} a las ${time}`);
+      csvRows.push("");
+
+      csvRows.push("RESUMEN GENERAL");
+      csvRows.push(`Total de Vuelos,${statsToExport.totalCount}`);
+      csvRows.push("");
+
+      csvRows.push("ESTADO DE LA FLOTA");
+      csvRows.push("Estado,Porcentaje (%)");
+      statsToExport.fleetStatus.forEach((item) => {
+        csvRows.push(`${item.name},${item.value}%`);
+      });
+      csvRows.push("");
+
+      csvRows.push("DESGLOSE POR PAÍS DE ORIGEN (Completo)");
+      csvRows.push("País,Cantidad de Vuelos");
+      statsToExport.topCountries.forEach((item) => {
+        csvRows.push(`${item.name},${item.value}`);
+      });
+
+      const csvString = csvRows.join("\n");
+      const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `AirVision_Reporte_Completo_${activeTab}_${Date.now()}.csv`
+      );
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error al descargar reporte:", error);
+      alert("Hubo un error al generar el reporte completo.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -165,7 +235,7 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
           </div>
 
           <div className="flex bg-gray-100 p-1 rounded-lg">
-            {(["global", "public", "private"] as TabType[]).map((tab) => (
+            {(["global", "public", "private", "mine"] as TabType[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -218,10 +288,18 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
                           tickLine={false}
                         />
                         <Tooltip
-                          cursor={{fill: 'transparent'}}
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                          labelStyle={{ color: '#111827', fontWeight: 'bold', marginBottom: '4px' }}
-                          itemStyle={{ color: '#6366f1' }}
+                          cursor={{ fill: "transparent" }}
+                          contentStyle={{
+                            borderRadius: "8px",
+                            border: "none",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                          }}
+                          labelStyle={{
+                            color: "#111827",
+                            fontWeight: "bold",
+                            marginBottom: "4px",
+                          }}
+                          itemStyle={{ color: "#6366f1" }}
                         />
                         <Bar
                           dataKey="value"
@@ -290,7 +368,10 @@ const DashboardStats: React.FC<DashboardStatsProps> = ({
                 </div>
               </div>
 
-              <button className="w-full py-3 bg-gray-900 hover:bg-black text-white text-sm font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95 group">
+              <button
+                onClick={handleDownloadReport}
+                className="w-full py-3 bg-gray-900 hover:bg-black text-white text-sm font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2 active:scale-95 group"
+              >
                 <div className="bg-gray-700 p-1 rounded group-hover:bg-gray-600 transition-colors">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"

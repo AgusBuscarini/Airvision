@@ -19,6 +19,7 @@ export interface DashboardStatsResponse {
   global: FlightStats;
   publicFlights: FlightStats;
   privateFlights: FlightStats;
+  myFlights: FlightStats;
 }
 
 const getAuthHeaders = (): HeadersInit => {
@@ -40,6 +41,18 @@ export async function getDashboardStats(): Promise<DashboardStatsResponse> {
 
   if (!response.ok) {
     throw new Error("Error al obtener estadísticas del dashboard");
+  }
+  return response.json();
+}
+
+export async function getFullExportStats(): Promise<DashboardStatsResponse> {
+  const response = await fetch(`${BASE_URL}/export`, {
+    method: "GET",
+    headers: getAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error("Error al obtener estadísticas completas para exportación");
   }
   return response.json();
 }
