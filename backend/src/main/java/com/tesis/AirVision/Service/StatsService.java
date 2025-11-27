@@ -1,0 +1,9 @@
+package com.tesis.AirVision.Service;
+
+import com.tesis.AirVision.Dtos.Stats.StatsResponseDto;
+import org.springframework.stereotype.Service;
+
+@Service
+public interface StatsService {
+    StatsResponseDto getDashboardStats();
+}
