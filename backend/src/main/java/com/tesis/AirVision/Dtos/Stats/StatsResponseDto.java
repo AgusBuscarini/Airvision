@@ -11,6 +11,7 @@ public class StatsResponseDto {
     private FlightStats global;
     private FlightStats publicFlights;
     private FlightStats privateFlights;
+    private FlightStats myFlights;
 
     @Data
     @Builder
