@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 import { getCountries } from "@/services/countryService";
 import {
   createPrivateAirline,
@@ -76,7 +77,12 @@ const AirlineModal: React.FC<AirlineModalProps> = ({
       );
 
       if (!selectedCountry) {
-        alert("Por favor, seleccione un país válido.");
+        Swal.fire({
+          icon: "warning",
+          title: "Falta información",
+          text: "Por favor, seleccione un país válido.",
+          confirmButtonColor: "#3085d6",
+        });
         return;
       }
 
@@ -90,28 +96,45 @@ const AirlineModal: React.FC<AirlineModalProps> = ({
 
       if (airlineToEdit) {
         await updateAirline(airlineToEdit.id, airlineData);
-        alert("✅ Aerolínea actualizada exitosamente");
+        Swal.fire({
+          icon: "success",
+          title: "¡Actualizada!",
+          text: "La aerolínea se actualizó correctamente.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
       } else {
         await createPrivateAirline(airlineData);
-        alert("✅ Aerolínea creada exitosamente");
+        Swal.fire({
+          icon: "success",
+          title: "¡Creada!",
+          text: "La aerolínea se creó correctamente.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
       }
 
       if (onSuccess) onSuccess();
       onClose();
     } catch (error: any) {
       console.error("Error al crear la aerolínea:", error);
-      alert(error.message || "Error al crear la aerolínea");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Ocurrió un error al guardar la aerolínea.",
+        confirmButtonColor: "#d33",
+      });
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000] flex justify-center items-center p-4 pointer-events-none">
-      <div className="bg-white p-6 rounded-lg shadow-xl z-[1010] w-full max-w-md mx-4 pointer-events-auto">
+    <div className="fixed inset-0 z-[2000] flex justify-center items-center bg-black/30 p-4" onClick={onClose}>
+      <div className="bg-white p-6 rounded-lg shadow-xl z-[1010] w-full max-w-md mx-4 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">
-            Agregar Aerolínea Privada
+            {airlineToEdit ? "Editar Aerolínea" : "Agregar Aerolínea Privada"}
           </h2>
           <button
             onClick={onClose}

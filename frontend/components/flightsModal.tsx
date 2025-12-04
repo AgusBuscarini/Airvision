@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 import {
   createPrivateFlight,
   CreatePrivateFlightRequest,
@@ -117,7 +118,6 @@ const FlightModal: React.FC<FlightModalProps> = ({
     setSubmitError("");
 
     try {
-      // Preparar los datos para enviar al backend
       const requestData: CreatePrivateFlightRequest = {
         callsign: formData.callsign,
         airlineId: formData.airlineId,
@@ -131,7 +131,13 @@ const FlightModal: React.FC<FlightModalProps> = ({
       console.log("Vuelo creado exitosamente:", createdFlight);
       if (onSuccess) onSuccess();
       onClose();
-      alert(`Vuelo ${createdFlight.callsign} creado (en tierra en origen).`);
+      Swal.fire({
+        icon: 'success',
+        title: '¡Vuelo Creado!',
+        text: `El vuelo ${createdFlight.callsign} se ha creado y está en tierra.`,
+        timer: 3000,
+        showConfirmButton: false
+      });
     } catch (error) {
       console.error("Error al crear vuelo:", error);
       setSubmitError(
@@ -139,6 +145,12 @@ const FlightModal: React.FC<FlightModalProps> = ({
           ? error.message
           : "Error desconocido al crear el vuelo"
       );
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Hubo un problema al crear el vuelo.',
+        confirmButtonColor: '#d33'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -149,8 +161,8 @@ const FlightModal: React.FC<FlightModalProps> = ({
   const isLoading = isLoadingAirlines || isLoadingAirports;
 
   return (
-    <div className="fixed inset-0 z-[1000] flex justify-center items-center p-4 pointer-events-none">
-      <div className="bg-white p-6 rounded-lg shadow-xl z-[1010] w-full max-w-lg max-h-[90vh] overflow-y-auto pointer-events-auto">
+    <div className="fixed inset-0 z-[2000] flex justify-center items-center bg-black/30 p-4" onClick={onClose}>
+      <div className="bg-white p-6 rounded-lg shadow-xl z-[1010] w-full max-w-lg max-h-[90vh] overflow-y-auto pointer-events-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">
             Crear Vuelo Privado
@@ -213,11 +225,7 @@ const FlightModal: React.FC<FlightModalProps> = ({
               !isLoadingAirlines &&
               !errorAirlines && (
                 <p className="text-xs text-gray-500 mt-1">
-                  No tienes aerolíneas privadas.{" "}
-                  <a href="#" className="text-blue-600 hover:underline">
-                    Crea una
-                  </a>
-                  .
+                  No tienes aerolíneas privadas.
                 </p>
               )}
           </div>
