@@ -1,4 +1,5 @@
 import { getToken } from "./userService";
+import { handleResponseError } from "@/utils/apiUtils";
 
 const BASE_URL = "/api/airports";
 
@@ -33,7 +34,7 @@ export async function getAirports(): Promise<Airport[]> {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
-    throw new Error("Error al obtener los aeropuertos");
+    await handleResponseError(response, "Error al obtener los aeropuertos");
   }
   return response.json();
 }

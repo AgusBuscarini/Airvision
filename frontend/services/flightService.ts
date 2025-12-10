@@ -1,4 +1,5 @@
 import { getToken, removeToken } from "./userService";
+import { handleResponseError } from "@/utils/apiUtils";
 
 export interface ExternalFlight {
   icao24: string;
@@ -58,11 +59,11 @@ export async function getFlights(): Promise<ExternalFlight[]> {
   });
   if (!response.ok) {
     if (response.status == 401 || response.status == 403) {
-      console.error("No autorizado o token expirado");
       removeToken();
       window.location.href = "/login";
+      throw new Error("Sesión expirada");
     }
-    throw new Error("Error al obtener los vuelos");
+    await handleResponseError(response, "Error al obtener los vuelos");
   }
   return response.json();
 }
@@ -73,11 +74,11 @@ export async function getPrivateFlights(): Promise<ExternalFlight[]> {
   });
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
-      console.error("No autorizado o token expirado para vuelos privados.");
       removeToken();
       window.location.href = "/login";
+      throw new Error("Sesión expirada");
     }
-    throw new Error("Error al obtener los vuelos");
+    await handleResponseError(response, "Error al obtener los vuelos");
   }
   const data: ExternalFlight[] = await response.json();
   return data.map((flight: ExternalFlight) => ({ ...flight, isPrivate: true }));
@@ -94,15 +95,12 @@ export async function createPrivateFlight(
 
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
-      console.error("No autorizado o token expirado al crear vuelo privado.");
       removeToken();
       window.location.href = "/login";
+      throw new Error("Sesión expirada");
     }
 
-    const errorData = await response.json().catch(() => ({}));
-    const errorMessage =
-      errorData.message || `Error ${response.status} al crear el vuelo`;
-    throw new Error(errorMessage);
+    await handleResponseError(response, "Error al crear el vuelo")
   }
 
   return response.json();
@@ -116,16 +114,13 @@ export async function deletePrivateFlight(id: string): Promise<void> {
 
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) {
-      console.error("No autorizado o token expirado al eliminar vuelo.");
       removeToken();
       window.location.href = "/login";
+      throw new Error("Sesión expirada");
     }
 
     if (response.status !== 204) {
-      const errorData = await response.json().catch(() => ({}));
-      const errorMessage =
-        errorData.message || `Error ${response.status} al eliminar el vuelo`;
-      throw new Error(errorMessage);
+      await handleResponseError(response, "Error al eliminar el vuelo")
     }
   }
 }

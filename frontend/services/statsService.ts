@@ -1,4 +1,5 @@
-import { getToken } from "./userService";
+import { getToken, removeToken } from "./userService";
+import { handleResponseError } from "@/utils/apiUtils";
 
 const BASE_URL = "/api/statistics";
 
@@ -40,7 +41,12 @@ export async function getDashboardStats(): Promise<DashboardStatsResponse> {
   });
 
   if (!response.ok) {
-    throw new Error("Error al obtener estadísticas del dashboard");
+    if (response.status === 401 || response.status === 403) {
+      removeToken(); 
+      window.location.href = "/login";
+      throw new Error("Sesión expirada");
+    }
+    await handleResponseError(response, "Error al obtener estadísticas del dashboard");
   }
   return response.json();
 }
@@ -52,7 +58,12 @@ export async function getFullExportStats(): Promise<DashboardStatsResponse> {
   });
 
   if (!response.ok) {
-    throw new Error("Error al obtener estadísticas completas para exportación");
+    if (response.status === 401 || response.status === 403) {
+      removeToken(); 
+      window.location.href = "/login";
+      throw new Error("Sesión expirada");
+    }
+    await handleResponseError(response, "Error al obtener estadísticas completas para exportación");
   }
   return response.json();
 }

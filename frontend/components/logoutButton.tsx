@@ -19,7 +19,6 @@ const ProfileIcon = () => (
     />
   </svg>
 );
-// ---
 
 export default function LogoutButton() {
   const { logout, role } = useAuth();

@@ -89,7 +89,11 @@ const MyFlightsModal: React.FC<MyFlightsModalProps> = ({ isOpen, onClose }) => {
       });
       fetchFlights();
     } catch (err: any) {
-      Swal.fire("Error", err.message || "Error al eliminar el vuelo", "error");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err.message || "Error al eliminar el vuelo",
+      });
     }
   };
 
@@ -204,7 +208,7 @@ const MyFlightsModal: React.FC<MyFlightsModalProps> = ({ isOpen, onClose }) => {
       <FlightModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
-        onSuccess={handleCreateSuccess} //
+        onSuccess={handleCreateSuccess}
       />
     </>
   );

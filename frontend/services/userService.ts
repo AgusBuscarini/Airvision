@@ -1,3 +1,5 @@
+import { handleResponseError } from "@/utils/apiUtils";
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -94,11 +96,11 @@ export async function loginUser(credentials: LoginRequest): Promise<LoginRespons
     body: JSON.stringify(credentials),
   });
 
-  const data: LoginResponse = await response.json();
-
   if (!response.ok) {
-    throw new Error(data.message || "Credenciales inválidas");
+    await handleResponseError(response, "Credenciales inválidas");
   }
+
+  const data: LoginResponse = await response.json();
 
   if (data.token && data.role) {
     saveToken(data.token, data.role);
@@ -118,13 +120,11 @@ export async function registerUser(
     body: JSON.stringify(credentials),
   });
 
-  const data: RegisterResponse = await response.json();
-
   if (!response.ok) {
-    throw new Error(data.message || "Error al registrar usuario");
+    await handleResponseError(response, "Error al registrar usuario");
   }
 
-  return data;
+  return response.json();
 }
 
 export async function getAllUsers(): Promise<User[]> {
@@ -137,8 +137,9 @@ export async function getAllUsers(): Promise<User[]> {
     if (response.status === 401 || response.status === 403) {
       removeToken();
       window.location.href = "/login";
+      throw new Error("Sesión expirada")
     }
-    throw new Error("Error al obtener los usuarios (solo Admin)");
+    await handleResponseError(response, "Error al obtener los usuarios (solo Admin)");
   }
   return response.json();
 }
@@ -157,9 +158,9 @@ export async function updateUserRole(
      if (response.status === 401 || response.status === 403) {
       removeToken();
       window.location.href = "/login";
+      throw new Error("Sesión expirada")
     }
-    const errorText = await response.text();
-    throw new Error(errorText || "Error al actualizar el rol del usuario");
+    await handleResponseError(response, "Error al actualizar el rol del usuario");
   }
   return response.json();
 }
@@ -174,8 +175,9 @@ export async function getMyProfile(): Promise<User> {
     if (response.status === 401 || response.status === 403) {
       removeToken();
       window.location.href = "/login";
+      throw new Error("Sesión expirada")
     }
-    throw new Error("Error al obtener los datos del usuario");
+    await handleResponseError(response, "Error al obtener los datos del usuario");
   }
   return response.json();
 }

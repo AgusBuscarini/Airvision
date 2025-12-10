@@ -1,4 +1,5 @@
 import { getToken } from "./userService";
+import { handleResponseError } from "@/utils/apiUtils";
 
 const BASE_URL = "/api/countries";
 
@@ -18,6 +19,6 @@ export async function getCountries() {
     method: "GET",
     headers: getAuthHeaders()
   });
-  if (!response.ok) throw new Error("Error al obtener los países");
+  if (!response.ok) await handleResponseError(response, "Error al obtener los países");
   return response.json();
 }

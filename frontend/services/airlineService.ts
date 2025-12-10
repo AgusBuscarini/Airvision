@@ -1,4 +1,5 @@
 import { getToken } from "./userService";
+import { handleResponseError } from "@/utils/apiUtils";
 
 const BASE_URL = "/api";
 
@@ -41,8 +42,7 @@ export async function createPrivateAirline(
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Error al crear la aerolínea");
+    await handleResponseError(response, "Error al crear la aerolínea");
   }
 
   return response.json();
@@ -63,7 +63,7 @@ export async function getMyPrivateAirlines(): Promise<AirlineResponse[]> {
   });
 
   if (!response.ok) {
-    throw new Error("Error al obtener mis aerolíneas privadas");
+    await handleResponseError(response, "Error al obtener mis aerolíneas privadas");
   }
   return response.json();
 }
@@ -83,8 +83,7 @@ export async function deleteMyPrivateAirline(id: string): Promise<void> {
       window.location.href = "/login";
     }
     if (response.status !== 204) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Error al eliminar la aerolínea");
+      await handleResponseError(response, "Error al eliminar la aerolínea");
     }
   }
 }
@@ -102,7 +101,7 @@ export async function getAllAirlines(): Promise<AirlineResponse[]> {
   });
 
   if (!response.ok) {
-    throw new Error("Error al obtener todas las aerolíneas");
+    await handleResponseError(response, "Error al obtener todas las aerolíneas");
   }
   return response.json();
 }
@@ -124,8 +123,7 @@ export async function updateAirline(
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "Error al actualizar la aerolínea");
+    await handleResponseError(response, "Error al actualizar la aerolínea");
   }
   return response.json();
 }
@@ -143,8 +141,7 @@ export async function deleteAirline(id: string): Promise<void> {
 
   if (!response.ok) {
     if (response.status !== 204) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Error al eliminar la aerolínea");
+      await handleResponseError(response, "Error al eliminar la aerolínea");
     }
   }
 }

@@ -1,4 +1,5 @@
 import { getToken } from "./userService";
+import { handleResponseError } from "@/utils/apiUtils";
 
 export interface PaymentRequest {
   title: string;
@@ -37,8 +38,7 @@ export async function createPreference(
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || "Error al crear la preferencia de pago");
+    await handleResponseError(response, "Error al crear la preferencia de pago");
   }
 
   return response.json();
