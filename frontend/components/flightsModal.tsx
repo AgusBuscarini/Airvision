@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 import {
   createPrivateFlight,
   CreatePrivateFlightRequest,
@@ -38,14 +39,9 @@ const FlightModal: React.FC<FlightModalProps> = ({
   });
 
   const [airports, setAirports] = useState<Airport[]>([]);
-  const [isLoadingAirports, setIsLoadingAirports] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
   const [privateAirlines, setPrivateAirlines] = useState<Airline[]>([]);
-  const [isLoadingAirlines, setIsLoadingAirlines] = useState(false);
-  const [errorAirports, setErrorAirports] = useState("");
-  const [errorAirlines, setErrorAirlines] = useState("");
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -55,40 +51,32 @@ const FlightModal: React.FC<FlightModalProps> = ({
         originAirportId: "",
         destinationAirportId: "",
       });
-      setSubmitError("");
 
-      const fetchAirlines = async () => {
-        setIsLoadingAirlines(true);
-        setErrorAirlines("");
+      const loadData = async () => {
+        setIsLoadingData(true);
         try {
-          const airlines = await getMyPrivateAirlines();
-          setPrivateAirlines(airlines);
-        } catch (error) {
-          console.error("Error fetching private airlines:", error);
-          setErrorAirlines("No se pudieron cargar las aerolíneas.");
+          const [airlinesData, airportsData] = await Promise.all([
+            getMyPrivateAirlines(),
+            getAirports()
+          ]);
+          setPrivateAirlines(airlinesData);
+          setAirports(airportsData);
+        } catch (error: any) {
+          console.error("Error cargando datos:", error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Error de carga',
+            text: error.message || 'No se pudieron cargar los datos necesarios.',
+          });
+          onClose();
         } finally {
-          setIsLoadingAirlines(false);
+          setIsLoadingData(false);
         }
       };
 
-      const fetchAirports = async () => {
-        setIsLoadingAirports(true);
-        setErrorAirports("");
-        try {
-          const airportData = await getAirports();
-          setAirports(airportData);
-        } catch (error) {
-          console.error("Error fetching airports:", error);
-          setErrorAirports("No se pudieron cargar los aeropuertos.");
-        } finally {
-          setIsLoadingAirports(false);
-        }
-      };
-
-      fetchAirlines();
-      fetchAirports();
+      loadData();
     }
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -105,19 +93,27 @@ const FlightModal: React.FC<FlightModalProps> = ({
       !formData.originAirportId ||
       !formData.destinationAirportId
     ) {
-      setSubmitError("Por favor, completa todos los campos obligatorios.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Faltan datos',
+        text: 'Por favor, completa todos los campos obligatorios.',
+        confirmButtonColor: '#3085d6',
+      });
       return;
     }
     if (formData.originAirportId === formData.destinationAirportId) {
-      setSubmitError("El origen y el destino no pueden ser iguales.");
+      Swal.fire({
+        icon: 'warning',
+        title: 'Ruta inválida',
+        text: 'El origen y el destino no pueden ser iguales.',
+        confirmButtonColor: '#3085d6',
+      });
       return;
     }
 
     setIsSubmitting(true);
-    setSubmitError("");
 
     try {
-      // Preparar los datos para enviar al backend
       const requestData: CreatePrivateFlightRequest = {
         callsign: formData.callsign,
         airlineId: formData.airlineId,
@@ -128,17 +124,24 @@ const FlightModal: React.FC<FlightModalProps> = ({
 
       const createdFlight = await createPrivateFlight(requestData);
 
-      console.log("Vuelo creado exitosamente:", createdFlight);
       if (onSuccess) onSuccess();
       onClose();
-      alert(`Vuelo ${createdFlight.callsign} creado (en tierra en origen).`);
-    } catch (error) {
+      
+      Swal.fire({
+        icon: 'success',
+        title: '¡Vuelo Creado!',
+        text: `El vuelo ${createdFlight.callsign} se ha creado y está en tierra.`,
+        timer: 3000,
+        showConfirmButton: false
+      });
+    } catch (error : any) {
       console.error("Error al crear vuelo:", error);
-      setSubmitError(
-        error instanceof Error
-          ? error.message
-          : "Error desconocido al crear el vuelo"
-      );
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.message || 'Hubo un problema al crear el vuelo.',
+        confirmButtonColor: '#d33'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -146,11 +149,9 @@ const FlightModal: React.FC<FlightModalProps> = ({
 
   if (!isOpen) return null;
 
-  const isLoading = isLoadingAirlines || isLoadingAirports;
-
   return (
-    <div className="fixed inset-0 z-[1000] flex justify-center items-center p-4 pointer-events-none">
-      <div className="bg-white p-6 rounded-lg shadow-xl z-[1010] w-full max-w-lg max-h-[90vh] overflow-y-auto pointer-events-auto">
+    <div className="fixed inset-0 z-[2000] flex justify-center items-center bg-black/30 p-4" onClick={onClose}>
+      <div className="bg-white p-6 rounded-lg shadow-xl z-[1010] w-full max-w-lg max-h-[90vh] overflow-y-auto pointer-events-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">
             Crear Vuelo Privado
@@ -164,12 +165,6 @@ const FlightModal: React.FC<FlightModalProps> = ({
           </button>
         </div>
 
-        {submitError && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {submitError}
-          </div>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label
@@ -178,12 +173,6 @@ const FlightModal: React.FC<FlightModalProps> = ({
             >
               Aerolínea*
             </label>
-            {isLoadingAirlines && (
-              <p className="text-sm text-gray-500">Cargando aerolíneas...</p>
-            )}
-            {errorAirlines && (
-              <p className="text-sm text-red-500">{errorAirlines}</p>
-            )}
             <select
               id="airlineId"
               name="airlineId"
@@ -194,9 +183,7 @@ const FlightModal: React.FC<FlightModalProps> = ({
               }`}
               required
               disabled={
-                isLoadingAirlines ||
-                !!errorAirlines ||
-                privateAirlines.length === 0 ||
+                isLoadingData ||
                 isSubmitting
               }
             >
@@ -210,14 +197,9 @@ const FlightModal: React.FC<FlightModalProps> = ({
               ))}
             </select>
             {privateAirlines.length === 0 &&
-              !isLoadingAirlines &&
-              !errorAirlines && (
+              !isLoadingData && (
                 <p className="text-xs text-gray-500 mt-1">
-                  No tienes aerolíneas privadas.{" "}
-                  <a href="#" className="text-blue-600 hover:underline">
-                    Crea una
-                  </a>
-                  .
+                  No tienes aerolíneas privadas. Crea una primero.
                 </p>
               )}
           </div>
@@ -266,7 +248,6 @@ const FlightModal: React.FC<FlightModalProps> = ({
               <label htmlFor="originAirportId" className="block text-sm font-medium text-gray-700 mb-1">
                 Aeropuerto Origen*
               </label>
-              {errorAirports && <p className="text-sm text-red-500">{errorAirports}</p>}
               <select
                 id="originAirportId"
                 name="originAirportId"
@@ -274,7 +255,7 @@ const FlightModal: React.FC<FlightModalProps> = ({
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-md p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
-                disabled={isLoading || !!errorAirports || isSubmitting}
+                disabled={isLoadingData || isSubmitting}
               >
                 <option value="" disabled>-- Selecciona Origen --</option>
                 {airports.map(airport => (
@@ -293,7 +274,7 @@ const FlightModal: React.FC<FlightModalProps> = ({
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-md p-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
-                disabled={isLoading || !!errorAirports || isSubmitting}
+                disabled={isLoadingData || isSubmitting}
               >
                 <option value="" disabled>-- Selecciona Destino --</option>
                 {airports.map(airport => (

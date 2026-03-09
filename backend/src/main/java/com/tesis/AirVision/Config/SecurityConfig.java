@@ -34,7 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         // Public endpoints
-                        .requestMatchers("/api/auth/**", "/api/health").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/health", "/api/payments/webhook").permitAll()
 
                         // Admin-only endpoints
                         .requestMatchers("/api/admin/users/**").hasAuthority("ADMIN")
@@ -45,6 +45,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/airlines").hasAnyAuthority("ADMIN", "USER_PREMIUM")
                         .requestMatchers("/api/airports").hasAnyAuthority("ADMIN", "USER_PREMIUM")
                         .requestMatchers("/api/countries").hasAnyAuthority("ADMIN", "USER_PREMIUM")
+                        .requestMatchers("/api/statistics/**").hasAnyAuthority("ADMIN", "USER_PREMIUM")
 
                         // All authenticated users can access global flights
                         .requestMatchers(HttpMethod.GET, "/api/flights/realtime", "/api/flights/limit", "/api/flights/scheduled").authenticated()
@@ -63,7 +64,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfig() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of("http://localhost:3000", "https://unbrandied-reminiscently-lady.ngrok-free.dev"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         configuration.setAllowedMethods(List.of("HEAD", "GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowCredentials(true);

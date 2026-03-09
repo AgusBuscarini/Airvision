@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 import { getCountries } from "@/services/countryService";
-import { createPrivateAirline, Country } from "@/services/airlineService";
+import {
+  createPrivateAirline,
+  updateAirline,
+  Country,
+  AirlineResponse,
+} from "@/services/airlineService";
 
 interface AirlineModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  airlineToEdit?: AirlineResponse | null;
 }
 
 export interface AirlineFormData {
@@ -19,6 +26,7 @@ const AirlineModal: React.FC<AirlineModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  airlineToEdit,
 }) => {
   const [formData, setFormData] = useState<AirlineFormData>({
     name: "",
@@ -34,8 +42,24 @@ const AirlineModal: React.FC<AirlineModalProps> = ({
       getCountries()
         .then((data) => setCountries(data))
         .catch((err) => console.error("Error al cargar países:", err));
+
+      if (airlineToEdit) {
+        setFormData({
+          name: airlineToEdit.name,
+          iata: airlineToEdit.iata || "",
+          icao: airlineToEdit.icao || "",
+          countryCode: airlineToEdit.country?.code || "",
+        });
+      } else {
+        setFormData({
+          name: "",
+          iata: "",
+          icao: "",
+          countryCode: "",
+        });
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, airlineToEdit]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -44,7 +68,7 @@ const AirlineModal: React.FC<AirlineModalProps> = ({
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
@@ -53,33 +77,64 @@ const handleSubmit = async (e: React.FormEvent) => {
       );
 
       if (!selectedCountry) {
-        alert("Por favor, seleccione un país válido.");
+        Swal.fire({
+          icon: "warning",
+          title: "Falta información",
+          text: "Por favor, seleccione un país válido.",
+          confirmButtonColor: "#3085d6",
+        });
         return;
       }
 
-      await createPrivateAirline({
+      const airlineData = {
         name: formData.name,
         iata: formData.iata,
         icao: formData.icao,
         country: selectedCountry,
-      });
+        active: airlineToEdit ? airlineToEdit.active : true
+      };
 
-      alert("✅ Aerolínea creada exitosamente");
+      if (airlineToEdit) {
+        await updateAirline(airlineToEdit.id, airlineData);
+        Swal.fire({
+          icon: "success",
+          title: "¡Actualizada!",
+          text: "La aerolínea se actualizó correctamente.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } else {
+        await createPrivateAirline(airlineData);
+        Swal.fire({
+          icon: "success",
+          title: "¡Creada!",
+          text: "La aerolínea se creó correctamente.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      }
+
+      if (onSuccess) onSuccess();
       onClose();
     } catch (error: any) {
       console.error("Error al crear la aerolínea:", error);
-      alert(error.message || "Error al crear la aerolínea");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: error.message || "Ocurrió un error al guardar la aerolínea.",
+        confirmButtonColor: "#d33",
+      });
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[1000] flex justify-center items-center p-4 pointer-events-none">
-      <div className="bg-white p-6 rounded-lg shadow-xl z-[1010] w-full max-w-md mx-4 pointer-events-auto">
+    <div className="fixed inset-0 z-[2000] flex justify-center items-center bg-black/30 p-4" onClick={onClose}>
+      <div className="bg-white p-6 rounded-lg shadow-xl z-[1010] w-full max-w-md mx-4 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-800">
-            Agregar Aerolínea Privada
+            {airlineToEdit ? "Editar Aerolínea" : "Agregar Aerolínea Privada"}
           </h2>
           <button
             onClick={onClose}
@@ -182,7 +237,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               type="submit"
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              Guardar Aerolínea
+              {airlineToEdit ? "Guardar Cambios" : "Guardar Aerolínea"}
             </button>
           </div>
         </form>

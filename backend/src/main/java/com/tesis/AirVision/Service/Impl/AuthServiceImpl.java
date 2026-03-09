@@ -34,19 +34,21 @@ public class AuthServiceImpl implements AuthService {
             return new LoginResponse("Los datos ingresados no son válidos", null, null);
         }
 
-        if (userRepository.findByEmail(request.getEmail()).isEmpty()) {
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+
+        if (userRepository.findByEmail(normalizedEmail).isEmpty()) {
             return new LoginResponse("Usuario no encontrado", null, null);
         }
 
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(normalizedEmail, request.getPassword())
             );
         } catch (AuthenticationException e) {
             return new LoginResponse("Credenciales invalidas", null, null);
         }
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(normalizedEmail);
         final String token = jwtService.generateToken(userDetails);
 
         String role = userDetails.getAuthorities().iterator().next().getAuthority();
@@ -62,13 +64,15 @@ public class AuthServiceImpl implements AuthService {
             return new RegisterResponse("Los datos ingresados no son validos");
         }
 
-        if(userRepository.findByEmail(request.getEmail()).isPresent()){
+        String normalizedEmail = request.getEmail().trim().toLowerCase();
+
+        if(userRepository.findByEmail(normalizedEmail).isPresent()){
             return new RegisterResponse("El email ya esta registrado");
         }
 
         User user = new User();
         user.setName(request.getName());
-        user.setEmail(request.getEmail());
+        user.setEmail(normalizedEmail);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.USER_FREE);
         user.setCreatedAt(OffsetDateTime.now());

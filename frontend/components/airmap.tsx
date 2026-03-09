@@ -8,12 +8,21 @@ import L from "leaflet";
 import { LatLngBoundsExpression } from "leaflet";
 import "leaflet.markercluster";
 import { useEffect, useState, useMemo } from "react";
-import { getFlights, getPrivateFlights, ExternalFlight } from "../services/flightService";
+import {
+  getFlights,
+  getPrivateFlights,
+  ExternalFlight,
+} from "../services/flightService";
 import LogoutButton from "./logoutButton";
 import AirlineManagementModal from "./airlineAdminManagement";
 import { useAuth } from "@/context/authContext";
 import MyAirlinesModal from "./myAirlinesModal";
 import MyFlightsModal from "./myFlightsModal";
+import FaqModal from "./faqModal";
+import TermsModal from "./termsModal";
+import HelpIcon from "./helpIcon";
+import PremiumModal from "./premiumModal";
+import DashboardStats from "./dashboardStats";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -35,6 +44,23 @@ const FilterIcon = () => (
       strokeLinecap="round"
       strokeLinejoin="round"
       d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.572a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z"
+    />
+  </svg>
+);
+
+const LockIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={2.5}
+    stroke="#FFFFFF"
+    style={{ width: "16px", height: "16px" }}
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M16.5 10.5V6.75a4.5 4.5 0 00-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
     />
   </svg>
 );
@@ -110,7 +136,7 @@ function FlightClusters({ flights }: { flights: ExternalFlight[] }) {
 
         const marker = L.marker([f.lat, f.lon], { icon }).bindPopup(`
           <strong>${f.callsign || "Vuelo sin ID"}</strong><br/>
-          País: ${f.originCountry}<br/>
+          Origen: ${f.originCountry}<br/>
           Altitud: ${Math.round(f.baroAltitude || 0)} m<br/>
           Velocidad: ${Math.round(f.velocity || 0)} m/s<br/>
           Rumbo: ${Math.round(f.trueTrack || 0)}°
@@ -161,10 +187,21 @@ export default function AirMap() {
   const [filters, setFilters] = useState<Filters>(initialFilters);
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
 
+  const [isHelpMenuOpen, setIsHelpMenuOpen] = useState(false);
+  const [isFaqOpen, setIsFaqOpen] = useState(false);
+  const [isTermsOpen, setIsTermsOpen] = useState(false);
+
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
+
   const { role } = useAuth();
+  const isPremium = role === "ADMIN" || role === "USER_PREMIUM";
 
   const [isAirlineManagementModalOpen, setIsAirlineManagementModalOpen] =
     useState(false);
+
+  const [hoveredPremium, setHoveredPremium] = useState<
+    "airlines" | "flights" | "filters" | null
+  >(null);
 
   const handleOpenAirlineManagementModal = () => {
     setIsMyFlightsModalOpen(false);
@@ -272,6 +309,18 @@ export default function AirMap() {
     setFilters(initialFilters);
   };
 
+  const handlePremiumFeatureClick = (feature: "airlines" | "flights") => {
+    if (role === "ADMIN" || role === "USER_PREMIUM") {
+      if (feature === "airlines") {
+        setIsMyAirlinesModalOpen(true);
+      } else if (feature === "flights") {
+        setIsMyFlightsModalOpen(true);
+      }
+    } else {
+      setIsPremiumModalOpen(true);
+    }
+  };
+
   return (
     <div style={{ position: "relative" }}>
       <LogoutButton />
@@ -304,23 +353,78 @@ export default function AirMap() {
           }}
         />
 
-        <button
-          onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
-          style={{
-            padding: "8px",
-            background: "#f0f0f0",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#333",
-          }}
-          title="Abrir filtros"
-        >
-          <FilterIcon />
-        </button>
+        <div style={{ position: "relative" }}>
+          <button
+            onClick={() => {
+              if (isPremium) {
+                setIsFilterMenuOpen(!isFilterMenuOpen);
+              } else {
+                setIsPremiumModalOpen(true);
+              }
+            }}
+            onMouseEnter={() => !isPremium && setHoveredPremium("filters")}
+            onMouseLeave={() => setHoveredPremium(null)}
+            style={{
+              padding: "8px",
+              background: "#f0f0f0",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: isPremium ? "#333" : "#9ca3af",
+              opacity: isPremium ? 1 : 0.8,
+            }}
+            title={isPremium ? "Abrir filtros" : "Función Premium"}
+          >
+            <FilterIcon />
+          </button>
+
+          {!isPremium && (
+            <div
+              style={{
+                position: "absolute",
+                top: "-6px",
+                right: "-6px",
+                zIndex: 1001,
+                backgroundColor: "#6b7280",
+                borderRadius: "50%",
+                padding: "2px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.5)",
+                pointerEvents: "none",
+                transform: "scale(0.8)",
+              }}
+            >
+              <LockIcon />
+            </div>
+          )}
+        </div>
+
+        {hoveredPremium === "filters" && (
+          <div
+            style={{
+              position: "absolute",
+              top: "45px",
+              left: "280px",
+              zIndex: 1010,
+              background: "white",
+              color: "#333",
+              padding: "6px 10px",
+              borderRadius: "6px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+              fontSize: "12px",
+              fontWeight: "bold",
+              pointerEvents: "none",
+              whiteSpace: "nowrap",
+            }}
+          >
+            ⭐ Función Premium
+          </div>
+        )}
 
         {isFilterMenuOpen && (
           <div
@@ -579,49 +683,265 @@ export default function AirMap() {
         </button>
       )}
 
-      {(role === "ADMIN" || role === "USER_PREMIUM") && (
-        <>
-          <button
-            onClick={() => setIsMyAirlinesModalOpen(true)}
+      <>
+        <button
+          onClick={() => handlePremiumFeatureClick("airlines")}
+          onMouseEnter={() =>
+            role === "USER_FREE" && setHoveredPremium("airlines")
+          }
+          onMouseLeave={() => setHoveredPremium(null)}
+          style={{
+            position: "absolute",
+            top: "100px",
+            right: "10px",
+            zIndex: 1000,
+            padding: "8px 12px",
+            backgroundColor: isPremium ? "#f59e0b" : "#9ca3af",
+            cursor: isPremium ? "pointer" : "not-allowed",
+            opacity: isPremium ? 1 : 0.7,
+            color: "white",
+            fontWeight: "bold",
+            border: "none",
+            borderRadius: "6px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
+          Mis Aerolineas
+        </button>
+
+        {hoveredPremium === "airlines" && (
+          <div
             style={{
               position: "absolute",
-              top: "100px",
-              right: "10px",
-              zIndex: 1000,
+              top: "104px",
+              right: "155px",
+              zIndex: 1010,
+              background: "white",
+              color: "#333",
               padding: "8px 12px",
-              backgroundColor: "#f59e0b",
+              borderRadius: "6px",
+              boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+              fontSize: "12px",
+              fontWeight: "bold",
+              pointerEvents: "none",
+            }}
+          >
+            ⭐ Función Premium
+          </div>
+        )}
+
+        {!isPremium && (
+          <div
+            style={{
+              position: "absolute",
+              top: "95px",
+              right: "5px",
+              zIndex: 1001,
+              backgroundColor: "#6b7280",
+              borderRadius: "50%",
+              padding: "3px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.5)",
+              pointerEvents: "none",
+            }}
+          >
+            <LockIcon />
+          </div>
+        )}
+
+        <button
+          onClick={() => handlePremiumFeatureClick("flights")}
+          onMouseEnter={() =>
+            role === "USER_FREE" && setHoveredPremium("flights")
+          }
+          onMouseLeave={() => setHoveredPremium(null)}
+          style={{
+            position: "absolute",
+            top: "145px",
+            right: "10px",
+            zIndex: 1000,
+            padding: "8px 12px",
+            backgroundColor: isPremium ? "#f59e0b" : "#9ca3af",
+            cursor: isPremium ? "pointer" : "not-allowed",
+            opacity: isPremium ? 1 : 0.7,
+            color: "white",
+            fontWeight: "bold",
+            border: "none",
+            borderRadius: "6px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+          }}
+        >
+          Mis Vuelos
+        </button>
+      </>
+
+      {hoveredPremium === "flights" && (
+        <div
+          style={{
+            position: "absolute",
+            top: "149px",
+            right: "125px",
+            zIndex: 1010,
+            background: "white",
+            color: "#333",
+            padding: "8px 12px",
+            borderRadius: "6px",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.2)",
+            fontSize: "12px",
+            fontWeight: "bold",
+            pointerEvents: "none",
+          }}
+        >
+          ⭐ Función Premium
+        </div>
+      )}
+
+      {!isPremium && (
+        <div
+          style={{
+            position: "absolute",
+            top: "140px",
+            right: "5px",
+            zIndex: 1001,
+            backgroundColor: "#6b7280",
+            borderRadius: "50%",
+            padding: "3px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.5)",
+            pointerEvents: "none",
+          }}
+        >
+          <LockIcon />
+        </div>
+      )}
+
+      <div
+        style={{
+          position: "absolute",
+          bottom: "20px",
+          right: "20px",
+          zIndex: 1000,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+        }}
+      >
+        {role === "USER_FREE" && (
+          <button
+            onClick={() => setIsPremiumModalOpen(true)}
+            style={{
+              padding: "8px 12px",
+              backgroundColor: "#10b981",
               color: "white",
               fontWeight: "bold",
               border: "none",
               borderRadius: "6px",
               cursor: "pointer",
               boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+              marginBottom: "10px",
             }}
           >
-            Mis Aerolineas
+            Hacerse Premium
           </button>
+        )}
+
+        <DashboardStats
+          isPremium={isPremium}
+          onOpenPremium={() => setIsPremiumModalOpen(true)}
+        />
+
+        <div style={{ position: "relative" }}>
+          {isHelpMenuOpen && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: "calc(100% + 10px)",
+                right: 0,
+                width: "200px",
+                backgroundColor: "white",
+                borderRadius: "8px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                overflow: "hidden",
+                zIndex: 1002,
+              }}
+            >
+              <button
+                onClick={() => {
+                  setIsFaqOpen(true);
+                  setIsHelpMenuOpen(false);
+                }}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "12px 16px",
+                  textAlign: "left",
+                  color: "#333",
+                  fontSize: "14px",
+                  border: "none",
+                  background: "none",
+                  borderBottom: "1px solid #eee",
+                  cursor: "pointer",
+                }}
+                className="hover:bg-gray-100"
+              >
+                Preguntas Frecuentes
+              </button>
+              <button
+                onClick={() => {
+                  setIsTermsOpen(true);
+                  setIsHelpMenuOpen(false);
+                }}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  padding: "12px 16px",
+                  textAlign: "left",
+                  color: "#333",
+                  fontSize: "14px",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                }}
+                className="hover:bg-gray-100"
+              >
+                Términos de Servicio
+              </button>
+            </div>
+          )}
 
           <button
-            onClick={() => setIsMyFlightsModalOpen(true)}
+            onClick={() => setIsHelpMenuOpen(!isHelpMenuOpen)}
             style={{
-              position: "absolute",
-              top: "145px",
-              right: "10px",
-              zIndex: 1000,
-              padding: "8px 12px",
-              backgroundColor: "#f59e0b",
+              padding: "12px",
+              backgroundColor: "#3b82f6",
               color: "white",
-              fontWeight: "bold",
               border: "none",
-              borderRadius: "6px",
+              borderRadius: "50%",
               cursor: "pointer",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+              boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "56px",
+              height: "56px",
             }}
+            title="Ayuda y Soporte"
           >
-            Mis Vuelos
+            <HelpIcon />
           </button>
-        </>
-      )}
+        </div>
+      </div>
+
       <MapContainer
         center={[20, 0]}
         zoom={2}
@@ -651,6 +971,13 @@ export default function AirMap() {
       <AirlineManagementModal
         isOpen={isAirlineManagementModalOpen}
         onClose={handleCloseAirlineManagementModal}
+      />
+
+      <FaqModal isOpen={isFaqOpen} onClose={() => setIsFaqOpen(false)} />
+      <TermsModal isOpen={isTermsOpen} onClose={() => setIsTermsOpen(false)} />
+      <PremiumModal
+        isOpen={isPremiumModalOpen}
+        onClose={() => setIsPremiumModalOpen(false)}
       />
     </div>
   );
