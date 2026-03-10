@@ -43,32 +43,36 @@ Infrastructure
 ---
 
 ## Architecture
+```
 React Frontend
-↓
+      ↓
 Spring Boot REST API
-↓
+      ↓
 PostgreSQL Database
-↓
+      ↓
 External API (OpenSky Network)
+```
 
 ---
 
 ## Project Structure
+```
 airvision
 │
 ├── backend
-│ ├── controller
-│ ├── service
-│ ├── repository
-│ └── model
+│   ├── controller
+│   ├── service
+│   ├── repository
+│   └── model
 │
 ├── frontend
-│ ├── components
-│ ├── pages
-│ └── services
+│   ├── components
+│   ├── pages
+│   └── services
 │
 ├── docker-compose.yml
 └── README.md
+```
 
 ---
 
