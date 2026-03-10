@@ -36,5 +36,17 @@ services:
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
       SPRING_JPA_SHOW_SQL: "true"
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: airvision-frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    environment: 
+      - BACKEND_URL=http://backend:8080
+
 volumes:
   postgres_data:

@@ -54,7 +54,7 @@ const getAuthHeaders = (): HeadersInit => {
 };
 
 export async function getFlights(): Promise<ExternalFlight[]> {
-  const response = await fetch(`${BASE_URL}/scheduled`, {
+  const response = await fetch(`${BASE_URL}/realtime`, {
     headers: getAuthHeaders(),
   });
   if (!response.ok) {
