@@ -8,5 +8,7 @@ import java.util.List;
 @Service
 public interface FlightScheduledService {
     void flightSchedule();
+    List<ExternalFlightDto> getAllCachedFlights();
+    List<ExternalFlightDto> getCachedFlightsLimited(int limit);
     List<ExternalFlightDto> getFlightsScheduled();
 }

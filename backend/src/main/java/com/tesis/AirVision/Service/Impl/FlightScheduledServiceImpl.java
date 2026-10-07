@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -15,16 +14,29 @@ import java.util.List;
 public class FlightScheduledServiceImpl implements FlightScheduledService {
     private final OpenSkyService openSkyService;
 
-    private List<ExternalFlightDto> flightScheduled = new ArrayList<>();
+    private volatile List<ExternalFlightDto> allFlights = List.of();
 
     @Override
     @Scheduled(fixedRate = 30000)
     public void flightSchedule() {
-        flightScheduled = openSkyService.getFlightsLimited(300);
+        allFlights = List.copyOf(openSkyService.getAllFlights());
+    }
+
+    @Override
+    public List<ExternalFlightDto> getAllCachedFlights() {
+        return allFlights;
+    }
+
+    @Override
+    public List<ExternalFlightDto> getCachedFlightsLimited(int limit) {
+        return allFlights.stream()
+                .filter(f -> f.getLat() != null && f.getLon() != null)
+                .limit(Math.max(limit, 0))
+                .toList();
     }
 
     @Override
     public List<ExternalFlightDto> getFlightsScheduled() {
-        return flightScheduled;
+        return getCachedFlightsLimited(300);
     }
 }

@@ -83,6 +83,11 @@ Clone the repository:
 git clone https://github.com/agusbuscarini/airvision
 ```
 
+Setup enviroment variables:
+```bash
+cp backend/.env.example backend/.env
+```
+
 Start the application using Docker:
 ```bash
 docker compose up

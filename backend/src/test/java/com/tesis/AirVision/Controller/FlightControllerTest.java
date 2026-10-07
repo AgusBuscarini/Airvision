@@ -2,7 +2,9 @@ package com.tesis.AirVision.Controller;
 
 import com.tesis.AirVision.Dtos.Flight.ExternalFlightDto;
 import com.tesis.AirVision.Service.FlightScheduledService;
-import com.tesis.AirVision.Service.OpenSkyService;
+import com.tesis.AirVision.Service.FlightManagementService;
+import com.tesis.AirVision.Security.JwtService;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,10 +32,16 @@ public class FlightControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private OpenSkyService openSkyService;
+    private FlightScheduledService flightScheduledService;
 
     @MockitoBean
-    private FlightScheduledService flightScheduledService;
+    private FlightManagementService flightManagementService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private UserDetailsService userDetailsService;
 
     @Test
     void getRealTimeFlights_ShouldReturnList() throws Exception {
@@ -45,7 +53,7 @@ public class FlightControllerTest {
                 .lon(20.0)
                 .build();
 
-        when(openSkyService.getAllFlights()).thenReturn(List.of(flight));
+        when(flightScheduledService.getAllCachedFlights()).thenReturn(List.of(flight));
 
         mockMvc.perform(get("/api/flights/realtime")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -63,7 +71,7 @@ public class FlightControllerTest {
                 .lon(40.0)
                 .build();
 
-        when(openSkyService.getFlightsLimited(anyInt())).thenReturn(List.of(flight));
+        when(flightScheduledService.getCachedFlightsLimited(anyInt())).thenReturn(List.of(flight));
 
         mockMvc.perform(get("/api/flights/limit")
                         .param("limit", "1")

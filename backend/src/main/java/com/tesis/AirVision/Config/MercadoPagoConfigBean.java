@@ -8,7 +8,7 @@ import jakarta.annotation.PostConstruct;
 
 @Configuration
 public class MercadoPagoConfigBean {
-
+    
     @Value("${mercadopago.access-token}")
     private String mpAccessToken;
 
@@ -16,9 +16,9 @@ public class MercadoPagoConfigBean {
     public void init() {
         if (mpAccessToken == null || mpAccessToken.isBlank()) {
             System.err.println("MP_ACCESS_TOKEN no encontrado o vacío. Revisar .env y docker-compose.yml");
-            throw new IllegalStateException("MP_ACCESS_TOKEN no configurado");
+            return;
         }
-        com.mercadopago.MercadoPagoConfig.setAccessToken(mpAccessToken);
+        MercadoPagoConfig.setAccessToken(mpAccessToken);
     }
 
 }

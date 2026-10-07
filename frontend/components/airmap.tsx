@@ -7,7 +7,7 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import L from "leaflet";
 import { LatLngBoundsExpression } from "leaflet";
 import "leaflet.markercluster";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import {
   getFlights,
   getPrivateFlights,
@@ -67,12 +67,10 @@ const LockIcon = () => (
 
 function FlightClusters({ flights }: { flights: ExternalFlight[] }) {
   const map = useMap();
+  const groupRef = useRef<ReturnType<typeof L.markerClusterGroup> | null>(null);
 
   useEffect(() => {
-    if (!map) return;
-
-    const markers = L.markerClusterGroup({
-      chunkedLoading: true,
+    const group = L.markerClusterGroup({
       iconCreateFunction: (cluster: any) => {
         const count = cluster.getChildCount();
         return L.divIcon({
@@ -112,9 +110,22 @@ function FlightClusters({ flights }: { flights: ExternalFlight[] }) {
       },
     });
 
-    flights
+    map.addLayer(group);
+    groupRef.current = group;
+
+    return () => {
+      map.removeLayer(group);
+      groupRef.current = null;
+    };
+  }, [map]);
+
+  useEffect(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    const markers = flights
       .filter((f) => f.lat && f.lon)
-      .forEach((f) => {
+      .map((f) => {
         const rotation = ((f.trueTrack ?? 0) - 90 + 360) % 360;
         const color = f.isPrivate ? "#22c55e" : "#3b82f6";
 
@@ -133,24 +144,18 @@ function FlightClusters({ flights }: { flights: ExternalFlight[] }) {
           iconSize: [20, 20],
           iconAnchor: [10, 10],
         });
-
-        const marker = L.marker([f.lat, f.lon], { icon }).bindPopup(`
+        return L.marker([f.lat, f.lon], { icon }).bindPopup(`
           <strong>${f.callsign || "Vuelo sin ID"}</strong><br/>
           Origen: ${f.originCountry}<br/>
           Altitud: ${Math.round(f.baroAltitude || 0)} m<br/>
           Velocidad: ${Math.round(f.velocity || 0)} m/s<br/>
           Rumbo: ${Math.round(f.trueTrack || 0)}°
         `);
-
-        markers.addLayer(marker);
       });
 
-    map.addLayer(markers);
-
-    return () => {
-      map.removeLayer(markers);
-    };
-  }, [flights, map]);
+    group.clearLayers();
+    group.addLayers(markers);
+  }, [flights]);
 
   return null;
 }

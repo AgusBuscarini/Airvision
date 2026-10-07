@@ -2,7 +2,6 @@ package com.tesis.AirVision.Controller;
 
 import com.tesis.AirVision.Entity.User;
 import com.tesis.AirVision.Service.FlightScheduledService;
-import com.tesis.AirVision.Service.OpenSkyService;
 import com.tesis.AirVision.Service.FlightManagementService;
 import com.tesis.AirVision.Dtos.Flight.*;
 import jakarta.validation.Valid;
@@ -20,19 +19,18 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class FlightController {
-    private final OpenSkyService openSkyService;
     private final FlightScheduledService flightScheduledService;
     private final FlightManagementService flightManagementService;
 
     @GetMapping("/realtime")
     public ResponseEntity<List<ExternalFlightDto>> getRealTimeFlights() {
-        List<ExternalFlightDto> flights = openSkyService.getAllFlights();
+        List<ExternalFlightDto> flights = flightScheduledService.getAllCachedFlights();
         return ResponseEntity.ok(flights);
     }
 
     @GetMapping("/limit")
     public ResponseEntity<List<ExternalFlightDto>> getFlightsLim(@RequestParam(defaultValue = "300") int limit) {
-        List<ExternalFlightDto> flights = openSkyService.getFlightsLimited(limit);
+        List<ExternalFlightDto> flights = flightScheduledService.getCachedFlightsLimited(limit);
         return ResponseEntity.ok(flights);
     }
 

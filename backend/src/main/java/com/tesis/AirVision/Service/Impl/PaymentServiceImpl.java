@@ -7,6 +7,8 @@ import com.tesis.AirVision.Dtos.Payments.CreatePreferenceResponse;
 import com.tesis.AirVision.Service.PaymentService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -25,8 +27,15 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${backend.webhook-url}")
     private String webhookUrl;
 
+    @Value("${mercadopago.access-token:}")
+	private String mpAccessToken;
+
     @Override
     public CreatePreferenceResponse createPreference(CreatePreferenceRequest req) {
+        if (mpAccessToken == null || mpAccessToken.isBlank()) {
+        	throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+        	"Los pagos no están configurados en este entorno");
+    	}
         try {
             PreferenceItemRequest item = PreferenceItemRequest.builder()
                     .title(req.getTitle())

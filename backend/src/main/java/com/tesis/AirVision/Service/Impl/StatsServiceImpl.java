@@ -36,7 +36,7 @@ public class StatsServiceImpl implements StatsService {
     }
 
     private StatsResponseDto generateStats(User user, boolean applyLimit) {
-        List<ExternalFlightDto> externalFlights = flightScheduledService.getFlightsScheduled();
+        List<ExternalFlightDto> externalFlights = flightScheduledService.getAllCachedFlights();
 
         OffsetDateTime activeThreshold = OffsetDateTime.now().minusMinutes(2);
         List<Flight> privateFlightsEntities = flightRepository.findBySource(Source.SIMULATED).stream()
